@@ -10,14 +10,24 @@ I was tired of typing the same information from my CV in every job form. AutoApp
 
 ## Features
 
-- **One-click fill** for name, email, phone, links, city, country, salary, English level and more.
+- **Review & fill** in two clicks: see the list of fields, then fill name, email, phone, links, city, country, salary, English level and more.
 - **Smart field detection** using `autocomplete`, input type, `<label>`, `aria-label`, placeholder, `name` and `id`. Works with labels in English and Spanish.
 - **Saved answers** for open questions ("Why do you want to work here?"). The extension picks the most similar saved question (Jaccard similarity).
 - **Learns from you**: save the long answers you write on a page with one click.
 - **Application history** with status (applied, interview, offer, rejected, ghosted), notes and CSV export.
+- **Integrations (Adapter pattern)**: save each application in Google Sheets (one row per application, you track the status there), ClickUp, an Excel file or any webhook at the same time. See [docs/integrations.md](docs/integrations.md).
 - **Works with React, Vue and Angular forms**: it uses the native value setter and fires `input`, `change` and `blur` events.
 - **Works inside iframes** (for example, embedded Greenhouse forms).
-- **Private by design**: data lives in `chrome.storage.local`. No server, no tracking. The script only runs when you click the button (`activeTab`).
+- **Private by design**: data lives in `chrome.storage.local`. No server, no tracking. The script only runs when you click the button (`activeTab`), and external sites (like ClickUp) are only allowed when you turn on an integration (optional permissions).
+
+## Security
+
+The extension was audited with a trap job page (hidden fields, third-party iframes, formula injection). All findings are fixed and covered by tests. See [SECURITY.md](SECURITY.md).
+
+- Fills **only visible fields**, and only after you review the list in the popup.
+- Never sends your data to third-party iframes (ads, widgets).
+- Saved answers are never filled without your tick.
+- Text that looks like a formula is neutralized before it reaches Google Sheets or CSV.
 
 ## Tech stack
 
@@ -33,6 +43,16 @@ src/
     rules.ts       Detection rules (EN + ES)
     matcher.ts     Field matching, answer similarity, select options, company guess
     storage.ts     Typed wrapper for chrome.storage.local
+    xlsx.ts        Small .xlsx writer (no big library)
+    downloads-writer.ts  Writes files with chrome.downloads
+    sinks/         Adapter pattern: where an application is saved
+      types.ts         ApplicationSink interface + settings
+      local-sink.ts    chrome.storage (always on)
+      clickup-sink.ts  ClickUp API adapter
+      webhook-sink.ts  Generic JSON POST (Sheets, Excel Online, Zapier…)
+      sheets-sink.ts   Google Sheets via Apps Script (append + update one cell)
+      excel-sink.ts    .xlsx file with the whole history (Downloads folder)
+      registry.ts      Factory + dispatcher
   content/     Runs in the job page
     dom.ts         Read labels, fill fields, collect answers
     content.ts     Exposes the API to the popup
@@ -75,4 +95,5 @@ To try it with the demo form, run `npx serve demo` (or any static server), open 
 - [ ] Rules for Ashby and Workday
 - [ ] Badge with the number of fields that can be filled
 - [ ] Optional AI suggestions for new open questions
+- [ ] `update()` for ClickUp (move the task when the status changes)
 - [ ] Optional backend (Laravel API) to sync history between devices

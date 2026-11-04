@@ -12,6 +12,7 @@ const options = {
     content: 'src/content/content.ts',
     popup: 'src/popup/popup.ts',
     options: 'src/options/options.ts',
+    background: 'src/background.ts',
   },
   bundle: true,
   format: 'iife',

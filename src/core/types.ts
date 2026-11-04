@@ -39,6 +39,8 @@ export interface Application {
   appliedAt: string;
   status: ApplicationStatus;
   notes: string;
+  /** Where else this application was saved, e.g. { clickup: { id, url } }. */
+  external?: Record<string, { id: string; url: string }>;
 }
 
 /** Plain description of a form field, so matching can be tested without a browser. */
@@ -50,7 +52,29 @@ export interface FieldDescriptor {
   placeholder: string;
   autocomplete: string;
   ariaLabel: string;
+  /** Explicit label: <label for>, wrapping <label>, aria-labelledby. */
   label: string;
+  /** Text before the field. Easy to fake, so it is used last. */
+  nearbyText?: string;
+}
+
+/** One field the extension proposes to fill. The popup shows these before filling. */
+export interface PlanItem {
+  ref: number;
+  label: string;
+  /** Profile key ("email") or, for answers, the saved question. */
+  source: string;
+  kind: 'profile' | 'answer';
+  /** Profile fields are selected by default; saved answers must be ticked by you. */
+  selected: boolean;
+}
+
+export interface FillPlan {
+  items: PlanItem[];
+  /** Fields that already had text. */
+  skipped: number;
+  /** Hidden fields that asked for your data and were ignored. */
+  hidden: number;
 }
 
 export interface FillReport {

@@ -17,7 +17,8 @@ export function matchField(field: FieldDescriptor): FieldKey | null {
   if (auto && AUTOCOMPLETE_MAP[auto]) return AUTOCOMPLETE_MAP[auto];
 
   // 2. Text signals. The visible label is what the human reads, so try it first.
-  const candidates = [field.label, field.ariaLabel, field.placeholder, splitCamel(field.name), splitCamel(field.id)]
+  // nearbyText goes last: a page can easily fake it (security fix #6).
+  const candidates = [field.label, field.ariaLabel, field.placeholder, splitCamel(field.name), splitCamel(field.id), field.nearbyText ?? '']
     .map(normalize)
     .filter(Boolean);
 
@@ -44,7 +45,11 @@ export function similarity(a: string, b: string): number {
   return common / (setA.size + setB.size - common);
 }
 
-export const ANSWER_THRESHOLD = 0.3;
+/**
+ * Minimum similarity to suggest a saved answer. Raised from 0.3 (security fix #3).
+ * The main protection is that answers are never filled without your tick in the popup.
+ */
+export const ANSWER_THRESHOLD = 0.4;
 
 /** Pick the saved answer whose question looks most like this one. */
 export function bestAnswer(question: string, answers: SavedAnswer[]): { answer: SavedAnswer; score: number } | null {

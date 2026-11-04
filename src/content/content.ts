@@ -1,14 +1,18 @@
-import { load } from '../core/storage';
-import type { FillReport } from '../core/types';
-import { collectAnswers, fillPage } from './dom';
+import { classifyFrame, type FrameInfo } from '../core/frames';
+import type { FillPlan, FillReport, Profile, SavedAnswer } from '../core/types';
+import { applyFill, collectAnswers, planFill } from './dom';
 
 /**
- * Injected on demand by the popup (activeTab + scripting) in every frame of the tab,
- * so the extension never reads pages you don't ask it to. Many ATS forms
- * (e.g. Greenhouse embeds) live inside an iframe, that is why we use all frames.
+ * Injected on demand by the popup (activeTab + scripting).
+ *
+ * Security (fix #4): this script never reads extension storage. The popup sends the
+ * profile and answers as arguments, and only to trusted frames (fix #2).
+ * So code running in a job page has no path to your ClickUp token or Sheets secret.
  */
 export interface AutoApplyApi {
-  fill(overwrite: boolean): Promise<FillReport>;
+  frameInfo(): FrameInfo;
+  plan(profile: Profile, answers: SavedAnswer[], overwrite: boolean): FillPlan;
+  apply(refs: number[]): FillReport;
   collect(): { question: string; answer: string }[];
 }
 
@@ -18,12 +22,16 @@ declare global {
   }
 }
 
+function topOrigin(): string {
+  if (window === window.top) return location.origin;
+  // Chrome: the origins of all parent frames, the last one is the top page.
+  const ancestors = location.ancestorOrigins;
+  return ancestors?.length ? ancestors[ancestors.length - 1] : 'unknown';
+}
+
 window.__autoapply ??= {
-  async fill(overwrite) {
-    const [profile, answers] = await Promise.all([load('profile'), load('answers')]);
-    return fillPage(document, profile, answers, { overwrite });
-  },
-  collect() {
-    return collectAnswers(document);
-  },
+  frameInfo: () => classifyFrame(window === window.top, location.origin, topOrigin()),
+  plan: (profile, answers, overwrite) => planFill(document, profile, answers, { overwrite }),
+  apply: (refs) => applyFill(refs),
+  collect: () => collectAnswers(document),
 };

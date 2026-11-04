@@ -1,11 +1,17 @@
 import { bestAnswer, matchField, pickOption, shouldSkip, valueFor } from '../core/matcher';
-import type { FieldDescriptor, FillReport, Profile, SavedAnswer } from '../core/types';
+import type { FieldDescriptor, FillPlan, FillReport, PlanItem, Profile, SavedAnswer } from '../core/types';
+import { isUserVisible } from './visibility';
 
 type FormField = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
 
 const HIGHLIGHT = 'outline: 2px solid #7c5cff; outline-offset: 1px; background-color: #f4f1ff;';
+const MAX_VALUE_LENGTH = 5000;
 
-/** Find the text a human sees for this field. */
+/**
+ * The label a human reads, from explicit markup only:
+ * <label for>, a wrapping <label>, or aria-labelledby.
+ * (Security fix #6: guessed nearby text is no longer used here, see nearbyText.)
+ */
 export function labelOf(el: FormField): string {
   const doc = el.ownerDocument;
   if (el.id) {
@@ -23,15 +29,21 @@ export function labelOf(el: FormField): string {
       .join(' ');
     if (text.trim()) return clean(text);
   }
+  return '';
+}
 
-  // Fallback: walk up a few levels and use the first text block before the field
-  // (common in Lever, Workable and custom forms).
+/**
+ * Last resort: the first text block before the field (Lever, Workable, custom forms).
+ * It is easy for a page to fake, so the matcher only uses it after aria-label,
+ * placeholder, name and id.
+ */
+export function nearbyText(el: FormField): string {
   let node: Element | null = el;
   for (let depth = 0; depth < 3 && node; depth++) {
     let prev = node.previousElementSibling;
     while (prev) {
       const text = prev.textContent?.trim();
-      if (text && text.length < 200) return clean(text);
+      if (text && text.length < 200 && !prev.querySelector('input, textarea, select')) return clean(text);
       prev = prev.previousElementSibling;
     }
     node = node.parentElement;
@@ -53,13 +65,8 @@ export function describe(el: FormField): FieldDescriptor {
     autocomplete: el.getAttribute('autocomplete') ?? '',
     ariaLabel: el.getAttribute('aria-label') ?? '',
     label: labelOf(el),
+    nearbyText: nearbyText(el),
   };
-}
-
-function isVisible(el: HTMLElement): boolean {
-  if (el.hidden || el.getAttribute('aria-hidden') === 'true') return false;
-  const style = el.ownerDocument.defaultView?.getComputedStyle(el);
-  return !style || (style.display !== 'none' && style.visibility !== 'hidden');
 }
 
 /**
@@ -76,41 +83,60 @@ export function setValue(el: FormField, value: string): void {
   el.dispatchEvent(new Event('blur', { bubbles: true }));
 }
 
-export function fields(root: Document | HTMLElement): FormField[] {
+function editableFields(root: Document | HTMLElement): FormField[] {
   return Array.from(root.querySelectorAll<FormField>('input, textarea, select')).filter(
-    (el) => !el.disabled && !(el as HTMLInputElement).readOnly && isVisible(el),
+    (el) => !el.disabled && !(el as HTMLInputElement).readOnly,
   );
 }
 
-export function fillPage(
+/** Pending plan in this frame: ref -> element + value. Kept until the user confirms. */
+const pending = new Map<number, { el: FormField; value: string; kind: PlanItem['kind'] }>();
+let nextRef = 1;
+
+/**
+ * Step 1 (security fix #1 and #3): decide what WOULD be filled, without touching the page.
+ * The popup shows this list and you confirm it.
+ * - Hidden fields are ignored and counted.
+ * - Saved answers are only suggested (not selected by default).
+ */
+export function planFill(
   root: Document | HTMLElement,
   profile: Profile,
   answers: SavedAnswer[],
   options: { overwrite?: boolean } = {},
-): FillReport {
-  const report: FillReport = { filled: 0, answered: 0, skipped: 0, fields: [] };
+): FillPlan {
+  pending.clear();
+  const plan: FillPlan = { items: [], skipped: 0, hidden: 0 };
 
-  for (const el of fields(root)) {
+  for (const el of editableFields(root)) {
     const desc = describe(el);
     if (shouldSkip(desc)) continue;
-    if (el.value && !options.overwrite) {
-      report.skipped++;
-      continue;
-    }
 
     const key = matchField(desc);
     let value = key ? valueFor(key, profile) : '';
     let source = key ?? '';
+    let kind: PlanItem['kind'] = 'profile';
 
-    // Open questions: use the most similar saved answer.
-    if (!value && el instanceof HTMLTextAreaElement && desc.label) {
-      const match = bestAnswer(desc.label, answers);
+    if (!value && el instanceof HTMLTextAreaElement) {
+      const question = desc.label || desc.ariaLabel || desc.placeholder || desc.nearbyText;
+      const match = question ? bestAnswer(question, answers) : null;
       if (match) {
         value = match.answer.answer;
-        source = `answer: ${match.answer.question}`;
+        source = match.answer.question;
+        kind = 'answer';
       }
     }
     if (!value) continue;
+
+    // Count hidden fields that tried to get data, so the popup can warn you.
+    if (!isUserVisible(el)) {
+      plan.hidden++;
+      continue;
+    }
+    if (el.value && !options.overwrite) {
+      plan.skipped++;
+      continue;
+    }
 
     if (el instanceof HTMLSelectElement) {
       const optionValue = pickOption(
@@ -121,20 +147,65 @@ export function fillPage(
       value = optionValue;
     }
 
-    setValue(el, value);
-    el.setAttribute('style', `${el.getAttribute('style') ?? ''};${HIGHLIGHT}`);
-    el.dataset.autoapply = 'filled';
-    if (source.startsWith('answer:')) report.answered++;
-    else report.filled++;
-    report.fields.push({ label: desc.label || desc.name || desc.id, source });
+    const ref = nextRef++;
+    pending.set(ref, { el, value: value.slice(0, MAX_VALUE_LENGTH), kind });
+    plan.items.push({
+      ref,
+      label: desc.label || desc.ariaLabel || desc.placeholder || desc.nearbyText || desc.name || desc.id,
+      source,
+      kind,
+      selected: kind === 'profile',
+    });
   }
+  return plan;
+}
+
+/** Step 2: fill only the fields you confirmed. Refs not in the current plan are ignored. */
+export function applyFill(refs: number[]): FillReport {
+  const report: FillReport = { filled: 0, answered: 0, skipped: 0, fields: [] };
+  for (const ref of refs) {
+    const item = pending.get(ref);
+    // Re-check: the page could have hidden or replaced the field after the preview.
+    if (!item || !item.el.isConnected || !isUserVisible(item.el)) {
+      report.skipped++;
+      continue;
+    }
+    setValue(item.el, item.value);
+    item.el.setAttribute('style', `${item.el.getAttribute('style') ?? ''};${HIGHLIGHT}`);
+    item.el.dataset.autoapply = 'filled';
+    if (item.kind === 'answer') report.answered++;
+    else report.filled++;
+    report.fields.push({ label: labelOf(item.el) || item.el.name || item.el.id, source: item.kind });
+  }
+  pending.clear();
   return report;
 }
 
-/** Collect the long answers you typed on this page, so you can save them for next time. */
+/** Plan + apply in one call. Used by tests; answers are only filled when asked. */
+export function fillPage(
+  root: Document | HTMLElement,
+  profile: Profile,
+  answers: SavedAnswer[],
+  options: { overwrite?: boolean; includeAnswers?: boolean } = {},
+): FillReport & { hidden: number } {
+  const plan = planFill(root, profile, answers, options);
+  const refs = plan.items.filter((i) => i.selected || (options.includeAnswers && i.kind === 'answer')).map((i) => i.ref);
+  const report = applyFill(refs);
+  return { ...report, skipped: report.skipped + plan.skipped, hidden: plan.hidden };
+}
+
+/**
+ * Collect the long answers YOU typed on this page, so you can save them for next time.
+ * Text the page put there itself (defaultValue) or hidden textareas are ignored,
+ * so a page cannot plant answers in your list.
+ */
 export function collectAnswers(root: Document | HTMLElement): { question: string; answer: string }[] {
   return Array.from(root.querySelectorAll('textarea'))
-    .filter((el) => el.dataset.autoapply !== 'filled' && el.value.trim().length >= 40)
-    .map((el) => ({ question: labelOf(el), answer: el.value.trim() }))
+    .filter((el) => el.dataset.autoapply !== 'filled' && el.value !== el.defaultValue && isUserVisible(el))
+    .filter((el) => el.value.trim().length >= 40)
+    .map((el) => ({
+      question: (labelOf(el) || el.getAttribute('aria-label') || nearbyText(el)).slice(0, 300),
+      answer: el.value.trim().slice(0, MAX_VALUE_LENGTH),
+    }))
     .filter((item) => item.question.length > 0);
 }

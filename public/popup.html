@@ -8,6 +8,14 @@
       body { width: 340px; padding: 14px; }
       #result ul { margin: 6px 0 0; padding-left: 18px; max-height: 140px; overflow: auto; }
       #result li { font-size: 12px; }
+      .results { font-size: 12px; }
+      #result .warn { color: #b26b00; font-size: 12px; margin: 4px 0; }
+      #result .plan { max-height: 180px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; margin: 6px 0; }
+      #result .plan-row { display: flex; gap: 6px; align-items: flex-start; color: var(--text); font-size: 12px; margin: 3px 0; }
+      #result .plan-row input { width: auto; margin-top: 2px; }
+      .results .ok { color: var(--ok); }
+      .results .error { color: var(--danger); }
+      .results a { color: var(--accent); }
     </style>
   </head>
   <body class="stack">
@@ -19,7 +27,7 @@
     <p id="profile-warning" class="muted" hidden>Your profile is empty. Open “Profile” and add your info first.</p>
 
     <section class="stack">
-      <button id="fill" class="primary" style="width: 100%">Fill this form</button>
+      <button id="fill" class="primary" style="width: 100%">Review &amp; fill this form</button>
       <label class="row" style="color: var(--text)">
         <input id="overwrite" type="checkbox" style="width: auto" /> Replace fields that already have text
       </label>
@@ -28,9 +36,11 @@
 
     <section class="card stack">
       <h2>Log this application</h2>
-      <div><label for="company">Company</label><input id="company" /></div>
+      <div><label for="company">Company (optional)</label><input id="company" /></div>
       <div><label for="role">Role</label><input id="role" /></div>
-      <button id="log">Save to history</button>
+      <button id="log">Save application</button>
+      <p class="muted" style="margin: 0"><span id="destinations"></span> · <a href="#" id="change-destinations" style="color: var(--accent)">Change</a></p>
+      <div id="log-result" class="results"></div>
     </section>
 
     <button id="collect" style="width: 100%">Save my answers from this page</button>

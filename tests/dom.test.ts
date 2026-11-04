@@ -53,8 +53,11 @@ describe('fillPage on the demo form', () => {
     expect(report.filled).toBe(14);
   });
 
-  it('uses saved answers for open questions and leaves unknown ones empty', () => {
-    const report = fillPage(document, profile, answers);
+  it('suggests saved answers but only fills them when you tick them (security fix #3)', () => {
+    expect(fillPage(document, profile, answers).answered).toBe(0);
+    expect(value('#q1')).toBe('');
+
+    const report = fillPage(document, profile, answers, { includeAnswers: true });
     expect(value('#q1')).toBe('I like remote product teams.');
     expect(value('#q2')).toBe('');
     expect(report.answered).toBe(1);
@@ -76,6 +79,7 @@ describe('fillPage on the demo form', () => {
   });
 
   it('collects long answers you typed', () => {
+    // Typed by the user (value differs from what the page put there)
     (document.querySelector('#q2') as HTMLTextAreaElement).value =
       'I fixed duplicated Stripe webhooks with an idempotency table and tests.';
     expect(collectAnswers(document)).toEqual([
