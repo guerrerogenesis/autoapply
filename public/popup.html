@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>AutoApply</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      body { width: 340px; padding: 14px; }
+      #result ul { margin: 6px 0 0; padding-left: 18px; max-height: 140px; overflow: auto; }
+      #result li { font-size: 12px; }
+    </style>
+  </head>
+  <body class="stack">
+    <header class="row">
+      <div class="brand grow"><span class="dot"></span><h1>AutoApply</h1></div>
+      <button id="open-options" class="small">Profile</button>
+    </header>
+
+    <p id="profile-warning" class="muted" hidden>Your profile is empty. Open “Profile” and add your info first.</p>
+
+    <section class="stack">
+      <button id="fill" class="primary" style="width: 100%">Fill this form</button>
+      <label class="row" style="color: var(--text)">
+        <input id="overwrite" type="checkbox" style="width: auto" /> Replace fields that already have text
+      </label>
+      <div id="result" class="muted"></div>
+    </section>
+
+    <section class="card stack">
+      <h2>Log this application</h2>
+      <div><label for="company">Company</label><input id="company" /></div>
+      <div><label for="role">Role</label><input id="role" /></div>
+      <button id="log">Save to history</button>
+    </section>
+
+    <button id="collect" style="width: 100%">Save my answers from this page</button>
+    <p id="toast" class="toast"></p>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

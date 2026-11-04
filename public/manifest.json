@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "AutoApply",
+  "version": "0.1.0",
+  "description": "Fill job application forms with your saved profile in one click.",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "action": {
+    "default_title": "AutoApply",
+    "default_popup": "popup.html"
+  },
+  "options_page": "options.html",
+  "commands": {
+    "_execute_action": {
+      "suggested_key": { "default": "Alt+Shift+F" }
+    }
+  }
+}

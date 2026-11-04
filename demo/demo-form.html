@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Full Stack Developer at Acme Remote</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; }
+      .field { margin-bottom: 14px; }
+      .field label, .application-label { display: block; font-weight: 600; margin-bottom: 4px; }
+      input, textarea, select { width: 100%; padding: 8px; font: inherit; box-sizing: border-box; }
+      h2 { margin-top: 32px; }
+    </style>
+  </head>
+  <body>
+    <h1>Full Stack Developer — Acme Remote</h1>
+    <p>Demo form to test AutoApply. It mixes Greenhouse, Lever and Spanish-style fields.</p>
+
+    <form onsubmit="event.preventDefault(); alert('Demo only')">
+      <h2>Greenhouse style (label for=)</h2>
+      <div class="field"><label for="first_name">First Name *</label><input id="first_name" name="job_application[first_name]" /></div>
+      <div class="field"><label for="last_name">Last Name *</label><input id="last_name" name="job_application[last_name]" /></div>
+      <div class="field"><label for="email">Email *</label><input id="email" type="email" /></div>
+      <div class="field"><label for="phone">Phone</label><input id="phone" type="text" /></div>
+      <div class="field"><label for="li">LinkedIn Profile</label><input id="li" /></div>
+      <div class="field"><label for="gh">GitHub</label><input id="gh" /></div>
+
+      <h2>Lever style (text before the field)</h2>
+      <div class="field"><div class="application-label">Full name</div><div><input name="name" /></div></div>
+      <div class="field"><div class="application-label">Current company</div><div><input name="org" /></div></div>
+      <div class="field"><div class="application-label">Portfolio URL</div><div><input name="urls[Portfolio]" /></div></div>
+
+      <h2>En español</h2>
+      <div class="field"><label>Ciudad <input name="ciudad" /></label></div>
+      <div class="field">
+        <label for="pais">País</label>
+        <select id="pais"><option value="">Selecciona…</option><option value="AR">Argentina</option><option value="CO">Colombia</option><option value="MX">México</option></select>
+      </div>
+      <div class="field"><label for="exp">Años de experiencia</label><input id="exp" /></div>
+      <div class="field"><label for="sal">Pretensión salarial (USD)</label><input id="sal" /></div>
+      <div class="field"><label for="eng">Nivel de inglés</label><input id="eng" /></div>
+
+      <h2>Open questions</h2>
+      <div class="field"><label for="q1">Why do you want to work at Acme?</label><textarea id="q1"></textarea></div>
+      <div class="field"><label for="q2">Tell us about a technical challenge you solved.</label><textarea id="q2"></textarea></div>
+      <div class="field"><label for="cv">Resume</label><input id="cv" type="file" /></div>
+
+      <button type="submit">Submit application</button>
+    </form>
+  </body>
+</html>

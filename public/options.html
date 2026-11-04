@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AutoApply · Profile</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+      nav { display: flex; gap: 6px; margin: 18px 0; flex-wrap: wrap; }
+      nav button[aria-selected='true'] { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+      .full { grid-column: 1 / -1; }
+      table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+      th { color: var(--muted); font-weight: 500; }
+      td a { color: var(--accent); }
+      .stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+      .stat { padding: 8px 12px; }
+      .stat b { display: block; font-size: 20px; }
+      .answer textarea { min-height: 110px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="brand"><span class="dot"></span><h1>AutoApply</h1></div>
+      <p class="muted">Your data is saved only in this browser (chrome.storage.local). Nothing is sent to a server.</p>
+
+      <nav role="tablist">
+        <button role="tab" data-tab="profile" aria-selected="true">Profile</button>
+        <button role="tab" data-tab="answers" aria-selected="false">Saved answers</button>
+        <button role="tab" data-tab="applications" aria-selected="false">Applications</button>
+        <button role="tab" data-tab="backup" aria-selected="false">Backup</button>
+      </nav>
+
+      <section id="tab-profile">
+        <form id="profile-form" class="grid"></form>
+        <div class="row" style="margin-top: 14px">
+          <button id="save-profile" class="primary">Save profile</button>
+          <span id="profile-toast" class="toast"></span>
+        </div>
+      </section>
+
+      <section id="tab-answers" hidden>
+        <p class="muted">Answers for open questions. When a form asks something similar, AutoApply uses the closest answer.</p>
+        <div id="answers" class="stack"></div>
+        <div class="row" style="margin-top: 12px">
+          <button id="add-answer">Add answer</button>
+          <button id="save-answers" class="primary">Save answers</button>
+          <span id="answers-toast" class="toast"></span>
+        </div>
+      </section>
+
+      <section id="tab-applications" hidden>
+        <div id="stats" class="stats"></div>
+        <table>
+          <thead><tr><th>Date</th><th>Company</th><th>Role</th><th>Status</th><th>Notes</th><th></th></tr></thead>
+          <tbody id="applications"></tbody>
+        </table>
+        <p class="row" style="margin-top: 12px"><button id="export-csv">Export CSV</button></p>
+      </section>
+
+      <section id="tab-backup" hidden class="card stack">
+        <h2>Backup</h2>
+        <p class="muted">Export everything to a JSON file, or import it on another computer.</p>
+        <div class="row">
+          <button id="export-json">Export JSON</button>
+          <label class="row" style="margin: 0">
+            <button id="import-button" type="button">Import JSON</button>
+            <input id="import-file" type="file" accept="application/json" hidden />
+          </label>
+        </div>
+        <span id="backup-toast" class="toast"></span>
+      </section>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>
