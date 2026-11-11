@@ -3,7 +3,7 @@ import type { Application, ApplicationStatus } from '../types';
 import { errorMessage, type ApplicationSink, type FetchFn, type GoogleSheetsSettings, type SinkResult } from './types';
 
 /** Columns of the sheet. The Apps Script below uses the same list. Id is last: it is only used to find the row. */
-export const SHEET_HEADERS = ['Date', 'Company', 'Role', 'Status', 'URL', 'Notes', 'ClickUp', 'Id'] as const;
+export const SHEET_HEADERS = ['Date', 'Company', 'Role', 'Profile', 'Status', 'URL', 'Notes', 'ClickUp', 'Id'] as const;
 export type SheetHeader = (typeof SHEET_HEADERS)[number];
 
 export const STATUS_OPTIONS: ApplicationStatus[] = ['applied', 'interview', 'offer', 'rejected', 'ghosted'];
@@ -14,6 +14,7 @@ export function toRow(a: Application): Record<SheetHeader, string> {
     Date: a.appliedAt.slice(0, 10),
     Company: a.company,
     Role: a.role,
+    Profile: a.profile ?? '',
     Status: a.status,
     URL: a.url,
     Notes: a.notes,
@@ -140,7 +141,9 @@ function doPost(e) {
     const sheet = sheet_();
     if (body.action === 'ping') return json_({ ok: true, sheetUrl: url_() });
 
-    const row = findRow_(sheet, body.id);
+    // Columns are found by their header name, so old sheets and moved columns still work.
+    const headers = headers_(sheet);
+    const row = findRow_(sheet, headers, body.id);
 
     if (body.action === 'delete') {
       if (row) sheet.deleteRow(row);
@@ -151,7 +154,7 @@ function doPost(e) {
       if (!row) return json_({ ok: false, error: 'Row not found in the sheet.' });
       // Only the columns that changed. What you edited in the sheet stays.
       Object.keys(body.values).forEach(function (header) {
-        const col = HEADERS.indexOf(header) + 1;
+        const col = headers.indexOf(header) + 1;
         if (col > 0) sheet.getRange(row, col).setValue(safe_(body.values[header]));
       });
       return json_({ ok: true, row: row, sheetUrl: url_() });
@@ -159,7 +162,7 @@ function doPost(e) {
 
     // create: append one row. If it already exists, do not touch it.
     if (row) return json_({ ok: true, row: row, sheetUrl: url_() });
-    sheet.appendRow(HEADERS.map(function (h) { return safe_(body.values[h]); }));
+    sheet.appendRow(headers.map(function (h) { return safe_(body.values[h]); }));
     return json_({ ok: true, row: sheet.getLastRow(), sheetUrl: url_() });
   } finally {
     lock.releaseLock();
@@ -181,9 +184,21 @@ function sheet_() {
   return sheet;
 }
 
-function findRow_(sheet, id) {
+// Header row of the sheet. Adds the columns that are missing (e.g. "Profile" in an old sheet) at the end.
+function headers_(sheet) {
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(String);
+  HEADERS.forEach(function (h) {
+    if (headers.indexOf(h) === -1) {
+      headers.push(h);
+      sheet.getRange(1, headers.length).setValue(h).setFontWeight('bold');
+    }
+  });
+  return headers;
+}
+
+function findRow_(sheet, headers, id) {
   if (!id || sheet.getLastRow() < 2) return 0;
-  const idCol = HEADERS.indexOf('Id') + 1;
+  const idCol = headers.indexOf('Id') + 1;
   const cell = sheet.getRange(2, idCol, sheet.getLastRow() - 1, 1).createTextFinder(id).matchEntireCell(true).findNext();
   return cell ? cell.getRow() : 0;
 }

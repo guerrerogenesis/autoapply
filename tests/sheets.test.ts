@@ -18,12 +18,16 @@ const app = (overrides: Partial<Application> = {}): Application => ({
 });
 
 /* ---------- A tiny fake of Google Sheets, to run the real Apps Script code ---------- */
-function fakeGoogle() {
-  const rows: unknown[][] = [];
-  const range = (row: number, col: number, numRows = 1, numCols = 1) => ({
+function fakeGoogle(initialRows: unknown[][] = []) {
+  const rows: unknown[][] = initialRows.map((r) => [...r]);
+  const range = (row: number, col: number, numRows = 1, numCols = 1): Record<string, unknown> => ({
     setFontWeight: () => undefined,
     setDataValidation: () => undefined,
-    setValue: (v: unknown) => void (rows[row - 1][col - 1] = v),
+    setValue: (v: unknown) => {
+      rows[row - 1][col - 1] = v;
+      return range(row, col);
+    },
+    getValues: () => rows.slice(row - 1, row - 1 + numRows).map((r) => Array.from({ length: numCols }, (_, i) => r[col - 1 + i] ?? '')),
     createTextFinder: (text: string) => ({
       matchEntireCell: () => ({
         findNext: () => {
@@ -36,6 +40,7 @@ function fakeGoogle() {
   });
   const sheet = {
     getLastRow: () => rows.length,
+    getLastColumn: () => Math.max(0, ...rows.map((r) => r.length)),
     getMaxRows: () => 1000,
     appendRow: (values: unknown[]) => void rows.push([...values]),
     deleteRow: (n: number) => void rows.splice(n - 1, 1),
@@ -57,7 +62,8 @@ function fakeGoogle() {
 
   /** fetch that sends the request to the script, like Google would. */
   const fetchFn = vi.fn<FetchFn>(async (_url, init) => new Response(doPost({ postData: { contents: init!.body as string } })));
-  const col = (name: string) => SHEET_HEADERS.indexOf(name as never);
+  /** Column index by the header in the sheet (row 1), like the script does. */
+  const col = (name: string) => (rows[0] as string[]).indexOf(name);
   return { rows, fetchFn, col };
 }
 
@@ -71,7 +77,7 @@ describe('GoogleSheetsSink + Apps Script', () => {
 
     expect(g.rows[0]).toEqual([...SHEET_HEADERS]);
     expect(g.rows).toHaveLength(3);
-    expect(g.rows[1]).toEqual(['2026-11-03', 'Acme', 'Full Stack Developer', 'applied', 'https://jobs.lever.co/acme/1', '', '', 'a1']);
+    expect(g.rows[1]).toEqual(['2026-11-03', 'Acme', 'Full Stack Developer', '', 'applied', 'https://jobs.lever.co/acme/1', '', '', 'a1']);
     expect(g.rows[2][g.col('Company')]).toBe(''); // company is optional
   });
 
@@ -127,5 +133,31 @@ describe('GoogleSheetsSink + Apps Script', () => {
     const html = vi.fn<FetchFn>().mockResolvedValue(new Response('<html>Sign in</html>'));
     const deploy = await new GoogleSheetsSink({ enabled: true, url: URL, secret: SECRET }, html).save(app());
     expect(deploy.error).toContain('"Anyone"');
+  });
+
+  it('saves the role you applied as in the Profile column', async () => {
+    const g = fakeGoogle();
+    const sink = new GoogleSheetsSink({ enabled: true, url: URL, secret: SECRET }, g.fetchFn);
+    await sink.save(app({ profile: 'Frontend Developer' }));
+    expect(g.rows[1][g.col('Profile')]).toBe('Frontend Developer');
+  });
+
+  it('works with an old sheet: adds the Profile column and finds rows by header', async () => {
+    // A sheet created before roles existed, with a column the user moved (Status first)
+    const old = [
+      ['Status', 'Date', 'Company', 'Role', 'URL', 'Notes', 'ClickUp', 'Id'],
+      ['interview', '2026-11-01', 'Old Co', 'Dev', 'https://old.co', '', '', 'old-1'],
+    ];
+    const g = fakeGoogle(old);
+    const sink = new GoogleSheetsSink({ enabled: true, url: URL, secret: SECRET }, g.fetchFn);
+
+    await sink.save(app({ profile: 'Backend Developer' }));
+    await sink.update(app({ id: 'old-1', notes: 'Call Friday' }), ['notes']);
+
+    expect(g.rows[0]).toEqual([...old[0], 'Profile']); // added at the end, nothing moved
+    expect(g.rows[2][g.col('Profile')]).toBe('Backend Developer');
+    expect(g.rows[2][g.col('Status')]).toBe('applied');
+    expect(g.rows[1][g.col('Notes')]).toBe('Call Friday'); // found the old row by its Id column
+    expect(g.rows[1][g.col('Status')]).toBe('interview'); // your status is kept
   });
 });

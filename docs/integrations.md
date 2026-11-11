@@ -68,14 +68,16 @@ Each application creates a task named `Company — Role`, with the link, date an
 
 Your sheet is the place to track your applications. Sabi adds one row per application:
 
-| Date | Company | Role | Status | URL | Notes | ClickUp | Id |
-|---|---|---|---|---|---|---|---|
+| Date | Company | Role | Profile | Status | URL | Notes | ClickUp | Id |
+|---|---|---|---|---|---|---|---|---|
 
 - **New application** → appends one row. Company can be empty if the page does not show it.
 - **Status** is a dropdown (applied, interview, offer, rejected, ghosted). Edit it in the sheet.
 - Sabi **never overwrites what you edit in the sheet**. If you change a field in the extension (for example notes), only that cell is updated.
 - Deleted in the extension → the row is deleted.
+- **Profile** is the role you applied as (for example "Frontend Developer"), so you can see which role gets more interviews.
 - `Id` is used to find the row. Do not edit it (you can hide the column).
+- The script finds columns by their **header name**: you can move columns, and an old sheet gets the new columns added at the end. After updating Sabi, copy the script again and publish a new version (**Deploy → Manage deployments → Edit → New version**).
 
 Setup (5 minutes, no Google Cloud project):
 

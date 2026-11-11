@@ -12,6 +12,8 @@ import { extractCvText } from './cv-text';
 import { parseBackup } from '../core/backup';
 import { neutralizeFormula, safeHref } from '../core/sanitize';
 import { restrictStorage } from '../background-helpers';
+import { ROLE_FIELDS, type RoleField, type RolesState } from '../core/roles';
+import { activeRole, currentRoles, reloadRoles, setupRoles } from './roles-ui';
 import type { Application, ApplicationStatus, Profile, SavedAnswer } from '../core/types';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -94,8 +96,15 @@ async function saveProfile() {
 /* ---------- Import from CV ---------- */
 let cvFound: CvFields = {};
 
+/** The input to fill from the CV: the role form when a role is open, else the base form. */
 function profileInput(key: keyof Profile) {
-  return document.getElementById(`p-${key}`) as HTMLInputElement | HTMLTextAreaElement | null;
+  const prefix = activeRole() ? 'r' : 'p';
+  return document.getElementById(`${prefix}-${key}`) as HTMLInputElement | HTMLTextAreaElement | null;
+}
+
+/** In a role, only the role fields can come from the CV (name, email… stay in the base info). */
+function cvFieldsForView() {
+  return activeRole() ? PROFILE_FIELDS.filter((f) => ROLE_FIELDS.includes(f.key as RoleField)) : PROFILE_FIELDS;
 }
 
 async function importCv(file: File) {
@@ -121,7 +130,7 @@ function renderCvReview(fileName: string) {
   $('cv-name').textContent = fileName;
   const rows = $('cv-rows');
   rows.innerHTML = '';
-  for (const field of PROFILE_FIELDS) {
+  for (const field of cvFieldsForView()) {
     const found = cvFound[field.key];
     if (!found) continue;
     const current = profileInput(field.key)?.value.trim() ?? '';
@@ -168,8 +177,13 @@ function applyCv() {
   });
   $('cv-review').hidden = true;
   cvFound = {};
-  flash('profile-toast', `${count} fields added from your CV. Check them and click Save profile.`);
-  $('save-profile').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (activeRole()) {
+    flash('role-toast', `${count} fields added from your CV. Check them and click Save role.`);
+    $('role-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    flash('profile-toast', `${count} fields added from your CV. Check them and click Save profile.`);
+    $('save-profile').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 }
 
 function setupCvImport() {
@@ -205,6 +219,12 @@ function renderAnswers() {
     answer.placeholder = 'Your answer';
     answer.value = item.answer;
     answer.addEventListener('input', () => (item.answer = answer.value));
+    // Which role this answer is for (empty = all roles)
+    const roleSelect = document.createElement('select');
+    roleSelect.style.width = 'auto';
+    roleSelect.add(new Option('For all roles', ''));
+    for (const role of currentRoles().list) roleSelect.add(new Option(`Only for ${role.name}`, role.id, false, item.roleId === role.id));
+    roleSelect.addEventListener('change', () => (item.roleId = roleSelect.value || undefined));
     const remove = document.createElement('button');
     remove.className = 'small danger';
     remove.textContent = 'Delete';
@@ -212,7 +232,11 @@ function renderAnswers() {
       answers.splice(index, 1);
       renderAnswers();
     });
-    card.append(question, answer, remove);
+    const footer = document.createElement('div');
+    footer.className = 'row';
+    footer.append(roleSelect, remove);
+    if (currentRoles().list.length === 0) roleSelect.hidden = true;
+    card.append(question, answer, footer);
     list.append(card);
   });
 }
@@ -326,8 +350,8 @@ async function exportCsv() {
   // Security fix #5: neutralize formulas, then quote for CSV.
   const escape = (v: string) => `"${neutralizeFormula(v).replace(/"/g, '""')}"`;
   const lines = [
-    ['date', 'company', 'role', 'status', 'url', 'notes'].join(','),
-    ...applications.map((a) => [a.appliedAt.slice(0, 10), a.company, a.role, a.status, a.url, a.notes].map(escape).join(',')),
+    ['date', 'company', 'role', 'profile', 'status', 'url', 'notes'].join(','),
+    ...applications.map((a) => [a.appliedAt.slice(0, 10), a.company, a.role, a.profile ?? '', a.status, a.url, a.notes].map(escape).join(',')),
   ];
   // The BOM (\uFEFF) makes Excel read accents (México, Pérez) correctly.
   download('applications.csv', '\uFEFF' + lines.join('\r\n'), 'text/csv;charset=utf-8');
@@ -643,6 +667,7 @@ async function importJson(file: File) {
     // Security fix #9: the file is validated and cleaned before anything is saved.
     await importAll(parseBackup(await file.text()));
     await renderProfile();
+    await reloadRoles();
     answers = await load('answers');
     renderAnswers();
     flash('backup-toast', 'Backup imported.');
@@ -656,6 +681,7 @@ async function init() {
   await restrictStorage();
   setupTabs();
   setupCvImport();
+  await setupRoles((_state: RolesState) => renderAnswers());
   setupIntegrations();
   setupSwitches();
   await renderIntegrations();

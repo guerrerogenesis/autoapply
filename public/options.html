@@ -20,6 +20,13 @@
       .stat { padding: 8px 12px; }
       .stat b { display: block; font-size: 20px; }
       .answer textarea { min-height: 110px; }
+      /* Profile sub-tabs (pills): a different style from the main tabs */
+      .pills { display: flex; gap: 8px; flex-wrap: wrap; }
+      .pill { border-radius: 999px; padding: 6px 12px; font-size: 13px; }
+      .pill[aria-selected='true'] { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); border-color: var(--accent); color: var(--text); }
+      .pill.add { border-style: dashed; color: var(--muted); }
+      .pill .star { color: var(--accent); margin-left: 4px; }
+      .role-base { font-size: 11px; color: var(--muted); margin-top: 4px; }
       /* CV import */
       .cv-table { display: grid; grid-template-columns: auto minmax(110px, 160px) 1fr; gap: 6px 10px; align-items: center; }
       .cv-table input[type='checkbox'] { width: auto; }
@@ -65,10 +72,13 @@
       </nav>
 
       <section id="tab-profile" class="stack">
+        <!-- Sub-tabs: base info + your roles -->
+        <div id="profile-pills" class="pills" role="tablist" aria-label="Profile and roles"></div>
+
         <div class="card stack" id="cv-card">
           <div class="row wrap">
             <div class="grow">
-              <h2 style="margin: 0">Import from your CV</h2>
+              <h2 style="margin: 0" id="cv-title">Import from your CV</h2>
               <p class="muted" style="margin: 2px 0 0">PDF, DOCX or TXT. The file is read in this browser and never uploaded. You review everything before it is saved.</p>
             </div>
             <button type="button" id="cv-button" class="primary">Choose CV file</button>
@@ -84,10 +94,48 @@
           </div>
           <span id="cv-toast" class="toast"></span>
         </div>
-        <form id="profile-form" class="grid"></form>
-        <div class="row" style="margin-top: 14px">
-          <button id="save-profile" class="primary">Save profile</button>
-          <span id="profile-toast" class="toast"></span>
+        <div id="base-view" class="stack">
+          <p class="muted" style="margin: 0">Your base info is used in every application. Roles can change the title, summary, years, salary and portfolio.</p>
+          <form id="profile-form" class="grid"></form>
+          <div class="row">
+            <button id="save-profile" class="primary">Save profile</button>
+            <span id="profile-toast" class="toast"></span>
+          </div>
+        </div>
+
+        <div id="role-view" class="stack" hidden>
+          <form id="role-form" class="card stack">
+            <div class="row wrap">
+              <h2 class="grow" style="margin: 0" id="role-heading"></h2>
+              <button type="button" id="role-duplicate" class="small">Duplicate</button>
+              <button type="button" id="role-delete" class="small danger">Delete</button>
+            </div>
+            <div class="grid">
+              <div><label for="r-name">Role name</label><input id="r-name" name="name" maxlength="80" required /></div>
+              <div class="full">
+                <label for="r-keywords">Keywords in the job title</label>
+                <input id="r-keywords" name="keywords" placeholder="frontend, react, vue" />
+                <p class="muted" style="margin: 4px 0 0">When a job title contains one of these words, Sabi picks this role. Separate them with commas.</p>
+              </div>
+            </div>
+            <div id="role-fields" class="grid"></div>
+            <label class="row" style="color: var(--text); margin: 0">
+              <input type="checkbox" id="r-default" style="width: auto" /> Use this role when no keyword matches
+            </label>
+            <div class="row">
+              <button type="submit" class="primary">Save role</button>
+              <span id="role-toast" class="toast"></span>
+            </div>
+          </form>
+        </div>
+
+        <div id="role-new" class="card stack" hidden>
+          <div>
+            <h2 style="margin: 0">New role</h2>
+            <p class="muted" style="margin: 2px 0 0">Create a version of your profile for a kind of job. Start from a template (you can change everything) or from scratch.</p>
+          </div>
+          <div id="role-templates" class="pills"></div>
+          <div><button type="button" id="role-blank">Start from scratch</button></div>
         </div>
       </section>
 

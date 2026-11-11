@@ -13,6 +13,7 @@ I was tired of typing the same information from my CV in every job form. Sabi sa
 ## Features
 
 - **Import from your CV** (PDF, DOCX or TXT): your profile is filled from your CV, in the browser, with no upload. You review every field before it is used.
+- **Roles**: one base profile (name, email, links…) plus your own versions for each kind of job (for example Frontend, Data Analyst). Each role changes the title, summary, years, salary and portfolio. Sabi picks the role from the job title and you can change it. New users start with no roles and create their own from templates or from scratch.
 - **Review & fill** in two clicks: see the list of fields, then fill name, email, phone, links, city, country, salary, English level and more.
 - **Smart field detection** using `autocomplete`, input type, `<label>`, `aria-label`, placeholder, `name` and `id`. Works with labels in English and Spanish.
 - **Saved answers** for open questions ("Why do you want to work here?"). The extension picks the most similar saved question (Jaccard similarity).
@@ -65,6 +66,7 @@ src/
     xlsx.ts        Small .xlsx writer (no big library)
     downloads-writer.ts  Writes files with chrome.downloads
     cv-parser.ts   Finds profile data in a CV (EN/ES rules, no AI)
+    roles.ts       Roles: templates, pick a role from the job title, merge with the base profile
     cv-docx.ts     Reads text from .docx files
     sinks/         Adapter pattern: where an application is saved
       types.ts         ApplicationSink interface + settings

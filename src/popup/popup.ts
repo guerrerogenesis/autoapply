@@ -4,6 +4,7 @@ import type { ApplicationSink, SinkResult } from '../core/sinks/types';
 import { downloadsWriter } from '../core/downloads-writer';
 import { safeHref } from '../core/sanitize';
 import { restrictStorage } from '../background-helpers';
+import { answersForRole, pickRole, profileForRole, roleOverrides, type Role, type RolesState } from '../core/roles';
 import { applicationRepository, load, newId, save } from '../core/storage';
 import type { Application, FillPlan, FillReport, Profile, SavedAnswer } from '../core/types';
 
@@ -48,6 +49,31 @@ let currentPlans: FramePlan[] = [];
 let currentTabId = 0;
 
 /** Step 1: show what will be filled. Nothing is written to the page yet (security fix #1, #3). */
+/* ---------- Roles ---------- */
+let roles: RolesState = { list: [], defaultId: '' };
+
+/** The role chosen in the selector, or null for the base profile only. */
+function selectedRole(): Role | null {
+  return roles.list.find((r) => r.id === $<HTMLSelectElement>('role-select').value) ?? null;
+}
+
+/** Fill the "Applying as" selector and pre-select a role from the job title. Hidden if you have no roles. */
+function renderRoleSelect(jobTitle: string) {
+  $('role-row').hidden = roles.list.length === 0;
+  if (!roles.list.length) return;
+  const select = $<HTMLSelectElement>('role-select');
+  select.innerHTML = '';
+  for (const role of roles.list) select.add(new Option(role.name, role.id));
+  select.add(new Option('Base profile only', ''));
+  const { role, matched } = pickRole(jobTitle, roles);
+  select.value = role?.id ?? '';
+  $('role-why').textContent = matched ? `Picked because the title says “${matched}”.` : role ? 'Default role (no keyword in the title).' : '';
+  select.addEventListener('change', () => {
+    $('role-why').textContent = 'Chosen by you.';
+    if (currentPlans.length) preview(); // refresh the preview with the new role
+  });
+}
+
 async function preview() {
   const button = $<HTMLButtonElement>('fill');
   button.disabled = true;
@@ -57,7 +83,11 @@ async function preview() {
     const tab = await activeTab();
     if (!tab.id) return;
     currentTabId = tab.id;
-    const [profile, answers] = await Promise.all([load('profile'), load('answers')]);
+    // Base profile + the chosen role (security: still only sent to trusted frames)
+    const [base, allAnswers] = await Promise.all([load('profile'), load('answers')]);
+    const role = selectedRole();
+    const profile = profileForRole(base, role);
+    const answers = answersForRole(allAnswers, role?.id);
     const { trusted, blocked } = await trustedFrames(tab.id);
 
     // The profile is only sent to trusted frames, as arguments (security fix #4).
@@ -77,6 +107,8 @@ async function preview() {
 }
 
 function renderPreview(blocked: string[]) {
+  const role = selectedRole();
+  const overrides = roleOverrides(role);
   const result = $('result');
   result.innerHTML = '';
   const items = currentPlans.flatMap((fp) => fp.plan.items.map((item) => ({ ...item, frameId: fp.frameId })));
@@ -112,7 +144,8 @@ function renderPreview(blocked: string[]) {
     box.dataset.ref = String(item.ref);
     box.dataset.frame = String(item.frameId);
     const text = document.createElement('span');
-    text.textContent = item.kind === 'answer' ? `${item.label} ← saved answer “${item.source}”` : `${item.label} ← ${item.source}`;
+    const fromRole = role && overrides.has(item.source as never) ? ` · ${role.name}` : '';
+    text.textContent = item.kind === 'answer' ? `${item.label} ← saved answer “${item.source}”` : `${item.label} ← ${item.source}${fromRole}`;
     row.append(box, text);
     list.append(row);
   }
@@ -216,6 +249,7 @@ async function logApplication() {
       appliedAt: new Date().toISOString(),
       status: 'applied',
       notes: '',
+      ...(selectedRole() ? { profile: selectedRole()!.name } : {}),
     };
     const results = await saveApplication(application, sinks, applicationRepository);
     renderSaveResults(results, sinks);
@@ -266,6 +300,8 @@ async function init() {
   $<HTMLInputElement>('role').value = fromPage(title.split(/[|\-–]| at | en /i)[0]);
 
   renderDestinations(await load('settings'));
+  roles = await load('roles');
+  renderRoleSelect(title);
 
   const profile = await load('profile');
   $('profile-warning').hidden = Boolean(profile.email || profile.firstName);

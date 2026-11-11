@@ -1,3 +1,4 @@
+import { parseKeywords, ROLE_FIELDS, type Role, type RolesState } from './roles';
 import { cleanText, safeHref } from './sanitize';
 import { EMPTY_PROFILE, type Application, type ApplicationStatus, type Profile, type SavedAnswer } from './types';
 
@@ -12,6 +13,7 @@ const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 export interface Backup {
   profile?: Profile;
+  roles?: RolesState;
   answers?: SavedAnswer[];
   applications?: Application[];
 }
@@ -37,8 +39,42 @@ function cleanAnswers(raw: unknown): SavedAnswer[] | undefined {
       question: cleanText(a.question, 300),
       answer: cleanText(a.answer, 5000),
       updatedAt: cleanText(a.updatedAt, 40),
+      ...(cleanText(a.roleId, 60) ? { roleId: cleanText(a.roleId, 60) } : {}),
     }))
     .filter((a) => a.question && a.answer);
+}
+
+function uniqueId(id: string, ids: Set<string>): string {
+  let unique = id;
+  for (let n = 2; ids.has(unique); n++) unique = `${id}-${n}`;
+  ids.add(unique);
+  return unique;
+}
+
+function cleanRoles(raw: unknown): RolesState | undefined {
+  if (!isObject(raw) || !Array.isArray(raw.list)) return undefined;
+  const ids = new Set<string>();
+  const list: Role[] = raw.list
+    .slice(0, 30)
+    .filter(isObject)
+    .map((r) => {
+      const fields: Role['fields'] = {};
+      const rawFields = isObject(r.fields) ? r.fields : {};
+      for (const key of ROLE_FIELDS) {
+        let value = cleanText(rawFields[key], key === 'summary' ? 5000 : 500);
+        if (key === 'portfolio') value = safeHref(value) ?? ''; // unsafe links are dropped
+        if (value) fields[key] = value;
+      }
+      return {
+        id: uniqueId(cleanText(r.id, 60) || crypto.randomUUID(), ids),
+        name: cleanText(r.name, 80) || 'Role',
+        keywords: parseKeywords(Array.isArray(r.keywords) ? r.keywords.map((k) => cleanText(k, 60)).join(',') : ''),
+        fields,
+      };
+    });
+  if (!list.length) return { list: [], defaultId: '' };
+  const defaultId = cleanText(raw.defaultId, 60);
+  return { list, defaultId: list.some((r) => r.id === defaultId) ? defaultId : '' };
 }
 
 function cleanApplications(raw: unknown): Application[] | undefined {
@@ -62,6 +98,7 @@ function cleanApplications(raw: unknown): Application[] | undefined {
         appliedAt: Number.isNaN(Date.parse(date)) ? new Date().toISOString() : date,
         status: STATUSES.includes(a.status as ApplicationStatus) ? (a.status as ApplicationStatus) : 'applied',
         notes: cleanText(a.notes, 2000),
+        ...(cleanText(a.profile, 80) ? { profile: cleanText(a.profile, 80) } : {}),
         ...(Object.keys(external).length ? { external } : {}),
       };
     });
@@ -79,9 +116,10 @@ export function parseBackup(text: string): Backup {
   if (!isObject(data)) throw new Error('This file is not a Sabi backup.');
   const backup: Backup = {
     profile: cleanProfile(data.profile),
+    roles: cleanRoles(data.roles),
     answers: cleanAnswers(data.answers),
     applications: cleanApplications(data.applications),
   };
-  if (!backup.profile && !backup.answers && !backup.applications) throw new Error('This file is not a Sabi backup.');
+  if (!backup.profile && !backup.roles && !backup.answers && !backup.applications) throw new Error('This file is not a Sabi backup.');
   return backup;
 }

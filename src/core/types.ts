@@ -27,6 +27,8 @@ export interface SavedAnswer {
   question: string;
   answer: string;
   updatedAt: string;
+  /** Only for this role. Empty = for all roles. */
+  roleId?: string;
 }
 
 export type ApplicationStatus = 'applied' | 'interview' | 'offer' | 'rejected' | 'ghosted';
@@ -39,6 +41,8 @@ export interface Application {
   appliedAt: string;
   status: ApplicationStatus;
   notes: string;
+  /** The role you applied as, e.g. "Frontend Developer". */
+  profile?: string;
   /** Where else this application was saved, e.g. { clickup: { id, url } }. */
   external?: Record<string, { id: string; url: string }>;
 }

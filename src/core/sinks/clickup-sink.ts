@@ -40,6 +40,7 @@ export class ClickUpSink implements ApplicationSink {
     const lines = [
       `Company: ${app.company}`,
       app.role ? `Role: ${app.role}` : null,
+      app.profile ? `Applied as: ${app.profile}` : null,
       `Applied: ${app.appliedAt.slice(0, 10)}`,
       app.url ? `Link: ${app.url}` : null,
       app.notes ? `Notes: ${app.notes}` : null,
