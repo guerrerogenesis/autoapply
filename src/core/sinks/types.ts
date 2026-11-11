@@ -61,7 +61,7 @@ export interface WebhookSettings {
 
 export interface ExcelSettings {
   enabled: boolean;
-  /** Path inside your Downloads folder, e.g. "AutoApply/applications.xlsx". */
+  /** Path inside your Downloads folder, e.g. "Sabi/applications.xlsx". */
   fileName: string;
 }
 
@@ -87,7 +87,7 @@ export const DEFAULT_SETTINGS: Settings = {
     sheets: { enabled: false, url: '', secret: '' },
     clickup: { enabled: false, token: '', listId: '', status: '' },
     webhook: { enabled: false, url: '', secret: '' },
-    excel: { enabled: false, fileName: 'AutoApply/applications.xlsx' },
+    excel: { enabled: false, fileName: 'Sabi/applications.xlsx' },
   },
 };
 

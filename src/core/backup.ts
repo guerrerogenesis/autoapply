@@ -76,12 +76,12 @@ export function parseBackup(text: string): Backup {
   } catch {
     throw new Error('This file is not valid JSON.');
   }
-  if (!isObject(data)) throw new Error('This file is not an AutoApply backup.');
+  if (!isObject(data)) throw new Error('This file is not a Sabi backup.');
   const backup: Backup = {
     profile: cleanProfile(data.profile),
     answers: cleanAnswers(data.answers),
     applications: cleanApplications(data.applications),
   };
-  if (!backup.profile && !backup.answers && !backup.applications) throw new Error('This file is not an AutoApply backup.');
+  if (!backup.profile && !backup.answers && !backup.applications) throw new Error('This file is not a Sabi backup.');
   return backup;
 }

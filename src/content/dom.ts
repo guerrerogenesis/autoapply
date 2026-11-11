@@ -4,7 +4,7 @@ import { isUserVisible } from './visibility';
 
 type FormField = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
 
-const HIGHLIGHT = 'outline: 2px solid #7c5cff; outline-offset: 1px; background-color: #f4f1ff;';
+const HIGHLIGHT = 'outline: 2px solid #667D59; outline-offset: 1px; background-color: #F1F4EE;';
 const MAX_VALUE_LENGTH = 5000;
 
 /**
@@ -172,7 +172,7 @@ export function applyFill(refs: number[]): FillReport {
     }
     setValue(item.el, item.value);
     item.el.setAttribute('style', `${item.el.getAttribute('style') ?? ''};${HIGHLIGHT}`);
-    item.el.dataset.autoapply = 'filled';
+    item.el.dataset.sabi = 'filled';
     if (item.kind === 'answer') report.answered++;
     else report.filled++;
     report.fields.push({ label: labelOf(item.el) || item.el.name || item.el.id, source: item.kind });
@@ -201,7 +201,7 @@ export function fillPage(
  */
 export function collectAnswers(root: Document | HTMLElement): { question: string; answer: string }[] {
   return Array.from(root.querySelectorAll('textarea'))
-    .filter((el) => el.dataset.autoapply !== 'filled' && el.value !== el.defaultValue && isUserVisible(el))
+    .filter((el) => el.dataset.sabi !== 'filled' && el.value !== el.defaultValue && isUserVisible(el))
     .filter((el) => el.value.trim().length >= 40)
     .map((el) => ({
       question: (labelOf(el) || el.getAttribute('aria-label') || nearbyText(el)).slice(0, 300),

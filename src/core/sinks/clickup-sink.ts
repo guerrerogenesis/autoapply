@@ -44,13 +44,13 @@ export class ClickUpSink implements ApplicationSink {
       app.url ? `Link: ${app.url}` : null,
       app.notes ? `Notes: ${app.notes}` : null,
       '',
-      'Saved with AutoApply',
+      'Saved with Sabi',
     ].filter((line): line is string => line !== null);
 
     return {
       name: app.role ? `${app.company} — ${app.role}` : app.company,
       description: lines.join('\n'),
-      tags: ['autoapply'],
+      tags: ['sabi'],
       ...(status ? { status } : {}),
     };
   }

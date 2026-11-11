@@ -1,7 +1,7 @@
 {
-  "name": "autoapply",
+  "name": "sabi",
   "version": "0.1.0",
-  "description": "Chrome extension that fills job application forms from your profile.",
+  "description": "Sabi \u2013 Job Forms Helper. Less typing. More opportunities.",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,7 @@
     "watch": "node scripts/build.mjs --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "zip": "npm run build && cd dist && zip -r ../autoapply.zip ."
+    "zip": "npm run build && cd dist && zip -r ../sabi.zip ."
   },
   "license": "MIT",
   "devDependencies": {
@@ -21,6 +21,7 @@
     "vitest": "^5.1.0"
   },
   "dependencies": {
-    "fflate": "^0.8.3"
+    "fflate": "^0.8.3",
+    "pdfjs-dist": "^6.5.438"
   }
 }

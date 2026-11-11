@@ -168,8 +168,8 @@ describe('#8 signed webhooks', () => {
 
     const init = fetchFn.mock.calls[0][1]!;
     const headers = init.headers as Record<string, string>;
-    const expected = await hmacSha256('top-secret', `${headers['X-AutoApply-Timestamp']}.${init.body}`);
-    expect(headers['X-AutoApply-Signature']).toBe(`sha256=${expected}`);
+    const expected = await hmacSha256('top-secret', `${headers['X-Sabi-Timestamp']}.${init.body}`);
+    expect(headers['X-Sabi-Signature']).toBe(`sha256=${expected}`);
   });
 });
 
@@ -201,12 +201,26 @@ describe('#9 backup import is validated', () => {
 
   it('rejects files that are not backups', () => {
     expect(() => parseBackup('not json')).toThrow('not valid JSON');
-    expect(() => parseBackup('[1,2]')).toThrow('not an AutoApply backup');
+    expect(() => parseBackup('[1,2]')).toThrow('not a Sabi backup');
   });
 
   it('safeHref only allows http(s)', () => {
     expect(safeHref('https://a.com')).toBe('https://a.com');
     expect(safeHref('javascript:alert(1)')).toBeNull();
     expect(safeHref('data:text/html,x')).toBeNull();
+  });
+});
+
+describe('CV import (local, safe PDF settings)', () => {
+  const source = readFileSync(resolve(__dirname, '../src/options/cv-text.ts'), 'utf8');
+  it('never lets a PDF run code and limits the file size', () => {
+    expect(source).toMatch(/isEvalSupported:\s*false/);
+    expect(source).toMatch(/enableXfa:\s*false/);
+    expect(source).toMatch(/MAX_CV_BYTES = 5 \* 1024 \* 1024/);
+  });
+  it('does not send the CV anywhere (no fetch in the import code)', () => {
+    for (const file of ['src/options/cv-text.ts', 'src/core/cv-parser.ts', 'src/core/cv-docx.ts']) {
+      expect(readFileSync(resolve(__dirname, '..', file), 'utf8'), file).not.toMatch(/fetch\(|XMLHttpRequest|sendBeacon/);
+    }
   });
 });

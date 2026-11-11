@@ -7,6 +7,8 @@ import { WebhookSink } from '../core/sinks/webhook-sink';
 import { downloadsWriter } from '../core/downloads-writer';
 import { applicationRepository, exportAll, importAll, load, newId, save } from '../core/storage';
 import { buildXlsx } from '../core/xlsx';
+import { parseCv, type CvFields } from '../core/cv-parser';
+import { extractCvText } from './cv-text';
 import { parseBackup } from '../core/backup';
 import { neutralizeFormula, safeHref } from '../core/sanitize';
 import { restrictStorage } from '../background-helpers';
@@ -87,6 +89,102 @@ async function saveProfile() {
   const profile = Object.fromEntries(PROFILE_FIELDS.map((f) => [f.key, String(data.get(f.key) ?? '').trim()])) as unknown as Profile;
   await save('profile', profile);
   flash('profile-toast', 'Profile saved.');
+}
+
+/* ---------- Import from CV ---------- */
+let cvFound: CvFields = {};
+
+function profileInput(key: keyof Profile) {
+  return document.getElementById(`p-${key}`) as HTMLInputElement | HTMLTextAreaElement | null;
+}
+
+async function importCv(file: File) {
+  $('cv-review').hidden = true;
+  $('cv-toast').textContent = 'Reading your CV…';
+  try {
+    const text = await extractCvText(file);
+    cvFound = parseCv(text);
+    if (!Object.keys(cvFound).length) {
+      $('cv-toast').textContent = 'No data found. If the PDF is a scanned image, try a PDF with selectable text or the DOCX.';
+      return;
+    }
+    $('cv-toast').textContent = '';
+    renderCvReview(file.name);
+  } catch (error) {
+    $('cv-toast').textContent = error instanceof Error ? error.message : 'This file could not be read.';
+    console.error(error);
+  }
+}
+
+/** Review table: tick, field, value found (editable), current value. Nothing is saved yet. */
+function renderCvReview(fileName: string) {
+  $('cv-name').textContent = fileName;
+  const rows = $('cv-rows');
+  rows.innerHTML = '';
+  for (const field of PROFILE_FIELDS) {
+    const found = cvFound[field.key];
+    if (!found) continue;
+    const current = profileInput(field.key)?.value.trim() ?? '';
+
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.dataset.key = field.key;
+    // Never replace what you already wrote unless you tick it yourself.
+    box.checked = !current || current === found;
+    box.id = `cv-${field.key}`;
+
+    const label = document.createElement('label');
+    label.htmlFor = box.id;
+    label.textContent = field.label;
+    label.style.margin = '0';
+
+    const value = document.createElement(field.multiline ? 'textarea' : 'input');
+    value.className = 'cv-value';
+    value.value = found;
+    value.dataset.value = field.key;
+    if (field.multiline) (value as HTMLTextAreaElement).rows = 3;
+
+    rows.append(box, label, value);
+    if (current && current !== found) {
+      const now = document.createElement('div');
+      now.className = 'now';
+      now.textContent = `Now: ${current.length > 80 ? `${current.slice(0, 80)}…` : current}`;
+      rows.append(now);
+    }
+  }
+  $('cv-review').hidden = false;
+}
+
+function applyCv() {
+  let count = 0;
+  document.querySelectorAll<HTMLInputElement>('#cv-rows input[type="checkbox"]:checked').forEach((box) => {
+    const key = box.dataset.key as keyof Profile;
+    const value = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(`#cv-rows [data-value="${key}"]`)?.value.trim();
+    const input = profileInput(key);
+    if (input && value) {
+      input.value = value;
+      count++;
+    }
+  });
+  $('cv-review').hidden = true;
+  cvFound = {};
+  flash('profile-toast', `${count} fields added from your CV. Check them and click Save profile.`);
+  $('save-profile').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function setupCvImport() {
+  const fileInput = $<HTMLInputElement>('cv-file');
+  $('cv-button').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = ''; // allow choosing the same file again
+    if (file) importCv(file);
+  });
+  $('cv-apply').addEventListener('click', applyCv);
+  $('cv-cancel').addEventListener('click', () => {
+    $('cv-review').hidden = true;
+    cvFound = {};
+  });
 }
 
 /* ---------- Answers ---------- */
@@ -363,7 +461,7 @@ const SHEETS_ORIGINS = ['https://script.google.com/*', 'https://script.googleuse
 
 function readExcel() {
   const v = formValues($<HTMLFormElement>('excel-form'));
-  return { enabled: v.enabled, fileName: v.text('fileName') || 'AutoApply/applications.xlsx' };
+  return { enabled: v.enabled, fileName: v.text('fileName') || 'Sabi/applications.xlsx' };
 }
 
 let webhookSecret = '';
@@ -473,7 +571,7 @@ function setupIntegrations() {
     e.preventDefault();
     const config = readExcel();
     if (!isValidFileName(config.fileName)) {
-      return showResult('excel', { sinkId: 'excel', ok: false, error: 'Use a name like AutoApply/applications.xlsx' });
+      return showResult('excel', { sinkId: 'excel', ok: false, error: 'Use a name like Sabi/applications.xlsx' });
     }
     const ask = config.enabled ? chrome.permissions.request({ permissions: ['downloads'] }) : Promise.resolve(true);
     ask.then(async (granted) => {
@@ -537,7 +635,7 @@ async function notifyIntegrations(change: 'update' | 'remove', app: Application,
 
 /* ---------- Backup ---------- */
 async function exportJson() {
-  download(`autoapply-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(await exportAll(), null, 2), 'application/json');
+  download(`sabi-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(await exportAll(), null, 2), 'application/json');
 }
 
 async function importJson(file: File) {
@@ -557,6 +655,7 @@ async function importJson(file: File) {
 async function init() {
   await restrictStorage();
   setupTabs();
+  setupCvImport();
   setupIntegrations();
   setupSwitches();
   await renderIntegrations();

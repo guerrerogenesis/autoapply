@@ -1,6 +1,6 @@
 # Security
 
-AutoApply handles personal data (name, email, phone, salary, private answers) and secrets (ClickUp token, Sheets and webhook secrets). This file explains the security audit of v0.1, what was fixed, and the risks that remain.
+Sabi handles personal data (name, email, phone, salary, private answers) and secrets (ClickUp token, Sheets and webhook secrets). This file explains the security audit of v0.1, what was fixed, and the risks that remain.
 
 ## Threat model
 
@@ -23,12 +23,19 @@ A trap job page (`tests/fixtures/trap-job.html`) was used to attack the real ext
 | 5 | Medium | Formula injection in Google Sheets / CSV through the page title | Values that start with `= + - @`, tab or carriage return get a leading `'`, in the extension **and** in the Apps Script. Page-based prefill drops formula-like starts. | `src/core/sanitize.ts`, `sheets-sink.ts` |
 | 6 | Medium | Fake text near a field could choose what was filled | Explicit labels, `aria-label`, placeholder, `name` and `id` go first. Nearby text is the last option. | `dom.ts`, `matcher.ts` |
 | 7 | Low | The Apps Script asked for access to all your spreadsheets | `@OnlyCurrentDoc`: access to this spreadsheet only | `sheets-sink.ts` |
-| 8 | Low | Webhooks were not signed | `X-AutoApply-Signature: sha256=HMAC(secret, timestamp + "." + body)` and `X-AutoApply-Timestamp` | `webhook-sink.ts` |
+| 8 | Low | Webhooks were not signed | `X-Sabi-Signature: sha256=HMAC(secret, timestamp + "." + body)` and `X-Sabi-Timestamp` | `webhook-sink.ts` |
 | 9 | Low | The backup import trusted any JSON | Schema validation: known fields only, strings with a max length, `http(s)` URLs only, max sizes. Links are rendered only if `http(s)`. | `src/core/backup.ts` |
 | 10 | Low | `optional_host_permissions: https://*/*` is broad | Accepted (see below) | `manifest.json` |
 | 11 | Info | Secrets stay in clipboard history after copying | **New secret** buttons for Sheets and the webhook | Integrations tab |
 
 Regression tests: `tests/security.test.ts` (one block per finding). Run them with `npm test`.
+
+## Import from CV
+
+- The CV is read **only in the browser**: no network calls in the import code (checked by a test).
+- PDFs are read with pdf.js (loaded only when needed) with `isEvalSupported: false`, `enableXfa: false` and `disableFontFace: true`, so a malicious PDF cannot run code. Max 5 MB and 10 pages.
+- DOCX files are unzipped reading only `word/document.xml` and its links (big embedded images are ignored).
+- Nothing is saved automatically: you review every field, and fields you already filled are not ticked.
 
 ## Accepted risks
 

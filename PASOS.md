@@ -1,4 +1,4 @@
-# AutoApply — Plan por pasos
+# Sabi — Plan por pasos
 
 La versión 1 ya funciona (pasos 1 a 5). Los pasos 6 a 10 son para mejorarla y para que el proyecto luzca en tu portafolio.
 
@@ -23,7 +23,7 @@ Cada vez que postules:
 En **Applications** cambia el estado (interview, rejected…) y agrega notas. Exporta a CSV cuando quieras.
 
 ### Paso 5 · Sube el repo a GitHub
-1. `git init`, primer commit, repo público `autoapply`.
+1. `git init`, primer commit, repo público `autoapply` (puedes renombrarlo a `sabi` en GitHub → Settings).
 2. Agrega capturas al README (popup, perfil, formulario llenado).
 3. Ponle topics: `chrome-extension`, `typescript`, `manifest-v3`, `job-search`.
 

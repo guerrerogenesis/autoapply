@@ -7,6 +7,6 @@ export async function restrictStorage(): Promise<void> {
   try {
     await chrome.storage.local.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' });
   } catch (error) {
-    console.warn('AutoApply: could not restrict storage access', error);
+    console.warn('Sabi: could not restrict storage access', error);
   }
 }

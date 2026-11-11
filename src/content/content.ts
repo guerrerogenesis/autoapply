@@ -9,7 +9,7 @@ import { applyFill, collectAnswers, planFill } from './dom';
  * profile and answers as arguments, and only to trusted frames (fix #2).
  * So code running in a job page has no path to your ClickUp token or Sheets secret.
  */
-export interface AutoApplyApi {
+export interface SabiApi {
   frameInfo(): FrameInfo;
   plan(profile: Profile, answers: SavedAnswer[], overwrite: boolean): FillPlan;
   apply(refs: number[]): FillReport;
@@ -18,7 +18,7 @@ export interface AutoApplyApi {
 
 declare global {
   interface Window {
-    __autoapply?: AutoApplyApi;
+    __sabi?: SabiApi;
   }
 }
 
@@ -29,7 +29,7 @@ function topOrigin(): string {
   return ancestors?.length ? ancestors[ancestors.length - 1] : 'unknown';
 }
 
-window.__autoapply ??= {
+window.__sabi ??= {
   frameInfo: () => classifyFrame(window === window.top, location.origin, topOrigin()),
   plan: (profile, answers, overwrite) => planFill(document, profile, answers, { overwrite }),
   apply: (refs) => applyFill(refs),

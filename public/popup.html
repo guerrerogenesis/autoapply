@@ -2,14 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>AutoApply</title>
+    <title>Sabi – Job Forms Helper</title>
+    <link rel="icon" href="icons/icon-32.png" />
     <link rel="stylesheet" href="styles.css" />
     <style>
       body { width: 340px; padding: 14px; }
       #result ul { margin: 6px 0 0; padding-left: 18px; max-height: 140px; overflow: auto; }
       #result li { font-size: 12px; }
       .results { font-size: 12px; }
-      #result .warn { color: #b26b00; font-size: 12px; margin: 4px 0; }
+      #result .warn { color: var(--warn); font-size: 12px; margin: 4px 0; }
       #result .plan { max-height: 180px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; margin: 6px 0; }
       #result .plan-row { display: flex; gap: 6px; align-items: flex-start; color: var(--text); font-size: 12px; margin: 3px 0; }
       #result .plan-row input { width: auto; margin-top: 2px; }
@@ -20,7 +21,7 @@
   </head>
   <body class="stack">
     <header class="row">
-      <div class="brand grow"><span class="dot"></span><h1>AutoApply</h1></div>
+      <div class="grow"><div class="brand"><img src="icons/icon-32.png" alt="" width="24" height="24" /><h1>Sabi</h1></div><p class="tagline">Less typing. More opportunities.</p></div>
       <button id="open-options" class="small">Profile</button>
     </header>
 

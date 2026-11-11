@@ -123,7 +123,7 @@ export function appsScriptCode(secret: string): string {
  * @OnlyCurrentDoc
  * (Google only gives this script access to THIS spreadsheet, not to all your files.)
  */
-// AutoApply → Google Sheets
+// Sabi → Google Sheets
 // Paste this in your sheet: Extensions → Apps Script. Then Deploy → New deployment → Web app.
 const SECRET = '${secret}';
 const SHEET_NAME = 'Applications';
@@ -132,7 +132,7 @@ const STATUSES = ${JSON.stringify(STATUS_OPTIONS)};
 
 function doPost(e) {
   const body = JSON.parse(e.postData.contents);
-  if (body.secret !== SECRET) return json_({ ok: false, error: 'Wrong secret. Copy the script again from AutoApply.' });
+  if (body.secret !== SECRET) return json_({ ok: false, error: 'Wrong secret. Copy the script again from Sabi.' });
 
   const lock = LockService.getScriptLock();
   lock.waitLock(10000); // two saves at the same time will not write the same row

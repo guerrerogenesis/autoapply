@@ -116,7 +116,7 @@ describe('GoogleSheetsSink + Apps Script', () => {
   it('rejects a wrong secret', async () => {
     const g = fakeGoogle();
     const result = await new GoogleSheetsSink({ enabled: true, url: URL, secret: 'wrong' }, g.fetchFn).save(app());
-    expect(result).toMatchObject({ ok: false, error: 'Wrong secret. Copy the script again from AutoApply.' });
+    expect(result).toMatchObject({ ok: false, error: 'Wrong secret. Copy the script again from Sabi.' });
     expect(g.rows).toHaveLength(0);
   });
 

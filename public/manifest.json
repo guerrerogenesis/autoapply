@@ -1,20 +1,44 @@
 {
   "manifest_version": 3,
-  "name": "AutoApply",
+  "name": "Sabi – Job Forms Helper",
+  "short_name": "Sabi",
   "version": "0.1.0",
-  "description": "Fill job application forms with your saved profile in one click.",
-  "permissions": ["storage", "activeTab", "scripting"],
-  "optional_permissions": ["downloads"],
-  "optional_host_permissions": ["https://api.clickup.com/*", "https://*/*"],
+  "description": "Less typing. More opportunities. Review and fill job forms with your profile, and track your applications.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "optional_permissions": [
+    "downloads"
+  ],
+  "optional_host_permissions": [
+    "https://api.clickup.com/*",
+    "https://*/*"
+  ],
   "action": {
-    "default_title": "AutoApply",
+    "default_title": "Sabi – Job Forms Helper",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    },
     "default_popup": "popup.html"
   },
   "options_page": "options.html",
-  "background": { "service_worker": "background.js" },
+  "background": {
+    "service_worker": "background.js"
+  },
   "commands": {
     "_execute_action": {
-      "suggested_key": { "default": "Alt+Shift+F" }
+      "suggested_key": {
+        "default": "Alt+Shift+F"
+      }
     }
   }
 }

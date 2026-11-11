@@ -38,7 +38,7 @@ export function applicationsSheet(applications: Application[]): SheetOptions {
   };
 }
 
-/** "AutoApply/applications.xlsx" -> valid; "../x.xlsx" or "C:\\x.xlsx" -> invalid. */
+/** "Sabi/applications.xlsx" -> valid; "../x.xlsx" or "C:\\x.xlsx" -> invalid. */
 export function isValidFileName(name: string): boolean {
   return /\.xlsx$/i.test(name) && !name.includes('..') && !/^([a-z]:|[\\/])/i.test(name) && !/[<>:"|?*]/.test(name);
 }
@@ -82,7 +82,7 @@ export class ExcelSink implements ApplicationSink {
   async sync(): Promise<SinkResult> {
     try {
       if (!isValidFileName(this.config.fileName)) {
-        throw new Error('Use a file name like AutoApply/applications.xlsx');
+        throw new Error('Use a file name like Sabi/applications.xlsx');
       }
       const bytes = buildXlsx(applicationsSheet(await this.repo.list()));
       await this.writer.write(this.config.fileName, bytes);

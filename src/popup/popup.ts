@@ -32,7 +32,7 @@ async function trustedFrames(tabId: number): Promise<{ trusted: number[]; blocke
   await chrome.scripting.executeScript({ target: { tabId, allFrames: true }, files: ['content.js'] });
   const infos = await chrome.scripting.executeScript({
     target: { tabId, allFrames: true },
-    func: () => window.__autoapply?.frameInfo(),
+    func: () => window.__sabi?.frameInfo(),
   });
   const trusted: number[] = [];
   const blocked = new Set<string>();
@@ -64,7 +64,7 @@ async function preview() {
     const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id, frameIds: trusted },
       args: [profile, answers, $<HTMLInputElement>('overwrite').checked],
-      func: (p: Profile, a: SavedAnswer[], ow: boolean) => window.__autoapply?.plan(p, a, ow),
+      func: (p: Profile, a: SavedAnswer[], ow: boolean) => window.__sabi?.plan(p, a, ow),
     });
     currentPlans = results.filter((r) => r.result).map((r) => ({ frameId: r.frameId, plan: r.result as FillPlan }));
     renderPreview(blocked);
@@ -145,7 +145,7 @@ async function applySelected() {
     const [res] = await chrome.scripting.executeScript({
       target: { tabId: currentTabId, frameIds: [frameId] },
       args: [refs],
-      func: (r: number[]) => window.__autoapply?.apply(r),
+      func: (r: number[]) => window.__sabi?.apply(r),
     });
     const report = res?.result as FillReport | undefined;
     filled += report?.filled ?? 0;
@@ -163,7 +163,7 @@ async function runInTab<T>(method: 'collect'): Promise<T[]> {
   const results = await chrome.scripting.executeScript({
     target: { tabId: tab.id, frameIds: trusted },
     args: [method],
-    func: (m: 'collect') => window.__autoapply?.[m](),
+    func: (m: 'collect') => window.__sabi?.[m](),
   });
   return results.map((r) => r.result as T).filter(Boolean);
 }

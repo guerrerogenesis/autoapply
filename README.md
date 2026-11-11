@@ -1,8 +1,10 @@
-# AutoApply
+# Sabi – Job Forms Helper 🐸
 
-A Chrome extension that fills job application forms with your profile in one click.
+**Less typing. More opportunities.**
 
-I was tired of typing the same information from my CV in every job form. AutoApply saves your data once and uses it on Greenhouse, Lever, Workable and custom forms, in English and Spanish.
+Sabi is a Chrome extension that fills job application forms with your profile, after you review them, and helps you track every application.
+
+I was tired of typing the same information from my CV in every job form. Sabi saves your data once and uses it on Greenhouse, Lever, Workable and custom forms, in English and Spanish.
 
 | Filled form | Profile page |
 |---|---|
@@ -10,6 +12,7 @@ I was tired of typing the same information from my CV in every job form. AutoApp
 
 ## Features
 
+- **Import from your CV** (PDF, DOCX or TXT): your profile is filled from your CV, in the browser, with no upload. You review every field before it is used.
 - **Review & fill** in two clicks: see the list of fields, then fill name, email, phone, links, city, country, salary, English level and more.
 - **Smart field detection** using `autocomplete`, input type, `<label>`, `aria-label`, placeholder, `name` and `id`. Works with labels in English and Spanish.
 - **Saved answers** for open questions ("Why do you want to work here?"). The extension picks the most similar saved question (Jaccard similarity).
@@ -29,6 +32,22 @@ The extension was audited with a trap job page (hidden fields, third-party ifram
 - Saved answers are never filled without your tick.
 - Text that looks like a formula is neutralized before it reaches Google Sheets or CSV.
 
+## Brand
+
+Sabi is a wise, friendly sage-green frog. *A little wisdom for your job search.*
+
+| Token | HEX | Usage |
+|---|---|---|
+| `--sabi-primary` | `#667D59` | Primary brand, buttons, active states |
+| `--sabi-background` | `#F7F6F0` | Main background |
+| `--sabi-surface` | `#FFFFFF` | Cards, forms, surfaces |
+| `--sabi-secondary` | `#EAE9E1` | Borders, dividers |
+| `--sabi-text` | `#34382F` | Headings and text |
+| `--sabi-muted` | `#77796F` | Secondary text |
+| `--sabi-accent` | `#B5A3C9` | Small details only |
+
+Font: Inter (bundled, no request to Google Fonts). Tokens and dark mode: `public/styles.css`. Icon sources: `assets/`.
+
 ## Tech stack
 
 TypeScript · Chrome Extension Manifest V3 · esbuild · Vitest + jsdom
@@ -45,6 +64,8 @@ src/
     storage.ts     Typed wrapper for chrome.storage.local
     xlsx.ts        Small .xlsx writer (no big library)
     downloads-writer.ts  Writes files with chrome.downloads
+    cv-parser.ts   Finds profile data in a CV (EN/ES rules, no AI)
+    cv-docx.ts     Reads text from .docx files
     sinks/         Adapter pattern: where an application is saved
       types.ts         ApplicationSink interface + settings
       local-sink.ts    chrome.storage (always on)
@@ -76,7 +97,7 @@ Load it in Chrome:
 1. Open `chrome://extensions`.
 2. Turn on **Developer mode**.
 3. Click **Load unpacked** and select the `dist` folder.
-4. Pin AutoApply, open **Profile** and add your info.
+4. Pin Sabi, open **Profile** and add your info.
 5. Open a job form and click **Fill this form** (or press `Alt+Shift+F`).
 
 To try it with the demo form, run `npx serve demo` (or any static server), open the page and click the extension.

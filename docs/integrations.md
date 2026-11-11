@@ -8,7 +8,7 @@ Turn apps on and off in **Profile → Integrations** (or **Change** in the popup
 
 The popup shows where it will save: `Saves to: This browser · Google Sheets · ClickUp`.
 
-When you click **Save application**, AutoApply can save the job in several places at the same time: this browser, ClickUp, an Excel file, Google Sheets, etc.
+When you click **Save application**, Sabi can save the job in several places at the same time: this browser, ClickUp, an Excel file, Google Sheets, etc.
 
 ## Design
 
@@ -57,32 +57,32 @@ The popup, the dispatcher and the other adapters do not change (Open/Closed prin
 
 1. In ClickUp: **Settings → Apps → API Token → Generate**. The token starts with `pk_`.
 2. Open the list where you want the tasks. Copy the URL from the browser (or only the number after `/li/`).
-3. In AutoApply: **Profile → Integrations → ClickUp**. Turn it on, paste the token and the list URL, click **Save** and accept the Chrome permission for `api.clickup.com`.
+3. In Sabi: **Profile → Integrations → ClickUp**. Turn it on, paste the token and the list URL, click **Save** and accept the Chrome permission for `api.clickup.com`.
 4. Click **Test connection**. You should see the list name.
 
-Each application creates a task named `Company — Role`, with the link, date and notes in the description and the tag `autoapply`. The optional **Status** must be a status that exists in that list (for example `to do`).
+Each application creates a task named `Company — Role`, with the link, date and notes in the description and the tag `sabi`. The optional **Status** must be a status that exists in that list (for example `to do`).
 
 > The token is saved only in `chrome.storage.local` and is not included in the JSON backup.
 
 ## Google Sheets (GoogleSheetsSink) · recommended
 
-Your sheet is the place to track your applications. AutoApply adds one row per application:
+Your sheet is the place to track your applications. Sabi adds one row per application:
 
 | Date | Company | Role | Status | URL | Notes | ClickUp | Id |
 |---|---|---|---|---|---|---|---|
 
 - **New application** → appends one row. Company can be empty if the page does not show it.
 - **Status** is a dropdown (applied, interview, offer, rejected, ghosted). Edit it in the sheet.
-- AutoApply **never overwrites what you edit in the sheet**. If you change a field in the extension (for example notes), only that cell is updated.
+- Sabi **never overwrites what you edit in the sheet**. If you change a field in the extension (for example notes), only that cell is updated.
 - Deleted in the extension → the row is deleted.
 - `Id` is used to find the row. Do not edit it (you can hide the column).
 
 Setup (5 minutes, no Google Cloud project):
 
 1. Create a Google Sheet. Open **Extensions → Apps Script**.
-2. In AutoApply: **Integrations → Google Sheets → Copy script**. Paste it in Apps Script (replace everything) and save.
+2. In Sabi: **Integrations → Google Sheets → Copy script**. Paste it in Apps Script (replace everything) and save.
 3. **Deploy → New deployment → Web app**. Execute as: *Me*. Who has access: *Anyone*. Authorize it with your Google account.
-4. Copy the Web app URL (`https://script.google.com/macros/s/…/exec`), paste it in AutoApply, turn it on and click **Save**. It tests the connection.
+4. Copy the Web app URL (`https://script.google.com/macros/s/…/exec`), paste it in Sabi, turn it on and click **Save**. It tests the connection.
 
 Security: the URL is public, so the script has a **secret** that only your extension knows. Requests without it are rejected. The script uses `@OnlyCurrentDoc`, so Google only gives it access to this spreadsheet. Text that looks like a formula (`=`, `+`, `-`, `@`) is saved as plain text. If the secret leaks, click **New secret**, copy the script again and use **Deploy → Manage deployments → Edit → New version** so the URL stays the same.
 
@@ -90,9 +90,9 @@ Security: the URL is public, so the script has a **secret** that only your exten
 
 > For tracking, prefer Google Sheets. This file is **rebuilt from the extension history each time**, so changes you make inside the file (for example Status) are lost on the next save. Change the status in the **Applications** tab instead.
 
-1. In AutoApply: **Integrations → Excel file**. Turn it on, keep the name `AutoApply/applications.xlsx` (or change it) and click **Save**.
+1. In Sabi: **Integrations → Excel file**. Turn it on, keep the name `Sabi/applications.xlsx` (or change it) and click **Save**.
 2. Chrome asks for the **downloads** permission. Accept it.
-3. The file is created in `Downloads\AutoApply\applications.xlsx`.
+3. The file is created in `Downloads\Sabi\applications.xlsx`.
 
 How it works:
 
@@ -109,11 +109,11 @@ You can also download a copy at any time with **Applications → Export Excel**.
 
 ## Webhook payload and signature
 
-Each request has two headers, so your receiver can check that it really comes from your AutoApply (copy the secret with **Copy signing secret**):
+Each request has two headers, so your receiver can check that it really comes from your Sabi (copy the secret with **Copy signing secret**):
 
 ```
-X-AutoApply-Timestamp: 1793750000
-X-AutoApply-Signature: sha256=<hex HMAC-SHA256 of "timestamp.body" with your secret>
+X-Sabi-Timestamp: 1793750000
+X-Sabi-Signature: sha256=<hex HMAC-SHA256 of "timestamp.body" with your secret>
 ```
 
 Example check in Node.js:
@@ -121,11 +121,11 @@ Example check in Node.js:
 ```js
 import crypto from 'node:crypto';
 
-function isFromAutoApply(req, rawBody, secret) {
-  const ts = req.headers['x-autoapply-timestamp'];
+function isFromSabi(req, rawBody, secret) {
+  const ts = req.headers['x-sabi-timestamp'];
   if (Math.abs(Date.now() / 1000 - Number(ts)) > 300) return false; // older than 5 minutes: replay
   const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(`${ts}.${rawBody}`).digest('hex');
-  const given = String(req.headers['x-autoapply-signature'] ?? '');
+  const given = String(req.headers['x-sabi-signature'] ?? '');
   return given.length === expected.length && crypto.timingSafeEqual(Buffer.from(given), Buffer.from(expected));
 }
 ```

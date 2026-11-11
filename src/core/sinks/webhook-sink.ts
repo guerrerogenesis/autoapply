@@ -30,7 +30,7 @@ export class WebhookSink implements ApplicationSink {
   async testConnection(): Promise<SinkResult> {
     const sample: Application = {
       id: 'test',
-      company: 'AutoApply test',
+      company: 'Sabi test',
       role: 'Test row (you can delete it)',
       url: '',
       appliedAt: new Date().toISOString(),
@@ -48,8 +48,8 @@ export class WebhookSink implements ApplicationSink {
       // Security fix #8: sign "timestamp.body" so the receiver can verify the sender and reject replays.
       if (this.config.secret) {
         const timestamp = String(Math.floor(Date.now() / 1000));
-        headers['X-AutoApply-Timestamp'] = timestamp;
-        headers['X-AutoApply-Signature'] = `sha256=${await hmacSha256(this.config.secret, `${timestamp}.${body}`)}`;
+        headers['X-Sabi-Timestamp'] = timestamp;
+        headers['X-Sabi-Signature'] = `sha256=${await hmacSha256(this.config.secret, `${timestamp}.${body}`)}`;
       }
       const response = await this.fetchFn(this.config.url, { method: 'POST', headers, body });
       if (!response.ok) throw new Error(`Webhook answered ${response.status} ${response.statusText}`);

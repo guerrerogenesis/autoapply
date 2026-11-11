@@ -1,66 +1,147 @@
+/* Sabi – Job Forms Helper · design tokens and base components */
+
+/* Inter is bundled with the extension (no request to Google Fonts). */
+@font-face { font-family: 'Inter'; font-weight: 400; font-display: swap; src: url('fonts/inter-400.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 500; font-display: swap; src: url('fonts/inter-500.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 600; font-display: swap; src: url('fonts/inter-600.woff2') format('woff2'); }
+
 :root {
-  --bg: #ffffff;
-  --surface: #f6f5fb;
-  --text: #1d1b26;
-  --muted: #6b6880;
-  --border: #e3e0ef;
-  --accent: #6d4aff;
-  --accent-text: #ffffff;
-  --ok: #1f8a5b;
-  --danger: #c23b3b;
-  color-scheme: light dark;
+  /* Brand tokens (style guide) */
+  --sabi-primary: #667d59;
+  --sabi-primary-hover: #5a6f4e;
+  --sabi-on-primary: #ffffff;
+  --sabi-accent: #b5a3c9;
+
+  --sabi-background: #f7f6f0;
+  --sabi-surface: #ffffff;
+  --sabi-secondary: #eae9e1;
+
+  --sabi-text: #34382f;
+  --sabi-muted: #77796f;
+
+  --sabi-radius: 10px;
+  --sabi-radius-sm: 8px;
+  --sabi-shadow: 0 2px 8px rgba(52, 56, 47, 0.05);
+  --sabi-focus: 0 0 0 3px rgba(102, 125, 89, 0.22);
+
+  /* Status colors, tuned to the palette (AA contrast on white) */
+  --sabi-ok: #4f6a41;
+  --sabi-warn: #8a5a12;
+  --sabi-danger: #a8443a;
+
+  /* Short names used by the pages */
+  --bg: var(--sabi-background);
+  --surface: var(--sabi-surface);
+  --field: var(--sabi-surface);
+  --border: var(--sabi-secondary);
+  --text: var(--sabi-text);
+  --muted: var(--sabi-muted);
+  --accent: var(--sabi-primary);
+  --accent-text: var(--sabi-on-primary);
+  --ok: var(--sabi-ok);
+  --warn: var(--sabi-warn);
+  --danger: var(--sabi-danger);
+
+  color-scheme: light;
 }
+
+/* Dark mode: same earthy palette, lighter sage for contrast */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #17151f;
-    --surface: #221f2e;
-    --text: #ece9f7;
-    --muted: #a19db6;
-    --border: #353148;
-    --accent: #9b83ff;
-    --accent-text: #120f1c;
-    --ok: #4cc38a;
-    --danger: #ff7b7b;
+    --sabi-primary: #8fa682;
+    --sabi-primary-hover: #a0b593;
+    --sabi-on-primary: #1c1f19;
+    --sabi-accent: #c4b5d6;
+    --sabi-background: #1c1f19;
+    --sabi-surface: #262a22;
+    --sabi-secondary: #3a3f34;
+    --sabi-text: #ecebe4;
+    --sabi-muted: #a7a99e;
+    --sabi-shadow: none;
+    --sabi-focus: 0 0 0 3px rgba(143, 166, 130, 0.3);
+    --sabi-ok: #a9c49a;
+    --sabi-warn: #e3b866;
+    --sabi-danger: #e8907f;
+    --field: #20241d;
+    color-scheme: dark;
   }
 }
+
 * { box-sizing: border-box; }
+
 body {
   margin: 0;
-  font: 14px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font: 400 14px/1.5 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   background: var(--bg);
   color: var(--text);
+  -webkit-font-smoothing: antialiased;
 }
+
+h1, h2, h3 { font-weight: 600; letter-spacing: -0.01em; color: var(--text); }
 h1 { font-size: 18px; margin: 0; }
 h2 { font-size: 15px; margin: 0 0 8px; }
+h3 { font-size: 14px; }
+a { color: var(--accent); }
+code { font-size: 12px; background: var(--border); padding: 1px 4px; border-radius: 4px; }
+
 .brand { display: flex; align-items: center; gap: 8px; }
-.brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+.brand img { border-radius: 6px; }
+.tagline { color: var(--muted); font-size: 12px; margin: 0; }
 .muted { color: var(--muted); font-size: 12px; }
+
+/* Buttons: primary = sage, secondary = white with charcoal text */
 button {
-  font: inherit;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 8px 16px;
+  border-radius: var(--sabi-radius-sm);
   cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 button:hover { border-color: var(--accent); }
-button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+button:focus-visible { outline: none; box-shadow: var(--sabi-focus); }
+button:disabled { opacity: 0.6; cursor: default; }
+button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+button.primary:hover { background: var(--sabi-primary-hover); border-color: var(--sabi-primary-hover); }
 button.danger { color: var(--danger); }
 button.small { padding: 4px 8px; font-size: 12px; }
+
+/* Inputs: white, warm-gray border, sage focus */
 input, textarea, select {
   font: inherit;
   width: 100%;
-  padding: 7px 9px;
+  padding: 8px 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg);
+  border-radius: var(--sabi-radius-sm);
+  background: var(--field);
   color: var(--text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
+input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: var(--sabi-focus); }
+input[type='checkbox'] { accent-color: var(--accent); }
 textarea { resize: vertical; min-height: 80px; }
-label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
-.stack > * + * { margin-top: 10px; }
+label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 4px; }
+
+/* Cards: white, subtle border, minimal shadow */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--sabi-radius);
+  box-shadow: var(--sabi-shadow);
+  padding: 16px;
+}
+
+/* 8px spacing scale */
+.stack > * + * { margin-top: 16px; }
 .row { display: flex; gap: 8px; align-items: center; }
 .grow { flex: 1; }
 .toast { color: var(--ok); font-size: 12px; min-height: 18px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}

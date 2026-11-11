@@ -7,6 +7,12 @@ rmSync('dist', { recursive: true, force: true });
 mkdirSync('dist', { recursive: true });
 cpSync('public', 'dist', { recursive: true });
 
+// pdf.js for "Import from CV" (loaded on demand by the options page).
+mkdirSync('dist/vendor', { recursive: true });
+for (const file of ['pdf.min.mjs', 'pdf.worker.min.mjs']) {
+  cpSync(`node_modules/pdfjs-dist/build/${file}`, `dist/vendor/${file}`);
+}
+
 const options = {
   entryPoints: {
     content: 'src/content/content.ts',

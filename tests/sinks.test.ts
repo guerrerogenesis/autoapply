@@ -53,7 +53,7 @@ describe('ClickUpSink (adapter)', () => {
     expect(task.name).toBe('Acme — Full Stack Developer');
     expect(task.description).toContain('Link: https://jobs.lever.co/acme/1');
     expect(task.description).toContain('Notes: Referral');
-    expect(task.tags).toEqual(['autoapply']);
+    expect(task.tags).toEqual(['sabi']);
     expect(task.status).toBe('to do');
     expect(ClickUpSink.toTask(app()).status).toBeUndefined();
   });
@@ -169,7 +169,7 @@ describe('saveApplication (dispatcher)', () => {
 });
 
 describe('ExcelSink (adapter)', () => {
-  const config = { enabled: true, fileName: 'AutoApply/applications.xlsx' };
+  const config = { enabled: true, fileName: 'Sabi/applications.xlsx' };
   const sheetXml = (bytes: Uint8Array) => strFromU8(unzipSync(bytes)['xl/worksheets/sheet1.xml']);
 
   it('writes the whole history as a real .xlsx', async () => {
@@ -178,7 +178,7 @@ describe('ExcelSink (adapter)', () => {
     const result = await new ExcelSink(config, repo, writer).save(app());
 
     expect(result).toEqual({ sinkId: 'excel', ok: true });
-    const bytes = writer.files['AutoApply/applications.xlsx'];
+    const bytes = writer.files['Sabi/applications.xlsx'];
     expect(Object.keys(unzipSync(bytes))).toContain('xl/workbook.xml');
     const xml = sheetXml(bytes);
     expect(xml).toContain('<t xml:space="preserve">Company</t>');
@@ -187,7 +187,7 @@ describe('ExcelSink (adapter)', () => {
   });
 
   it('rejects unsafe file names', async () => {
-    expect(isValidFileName('AutoApply/applications.xlsx')).toBe(true);
+    expect(isValidFileName('Sabi/applications.xlsx')).toBe(true);
     expect(isValidFileName('../secret.xlsx')).toBe(false);
     expect(isValidFileName('C:/x.xlsx')).toBe(false);
     expect(isValidFileName('notes.txt')).toBe(false);
@@ -216,7 +216,7 @@ describe('ExcelSink (adapter)', () => {
     const results = await saveApplication(app(), sinks, repo);
 
     expect(results.map((r) => r.sinkId)).toEqual(['local', 'clickup', 'excel']);
-    expect(sheetXml(writer.files['AutoApply/applications.xlsx'])).toContain('https://app.clickup.com/t/t9');
+    expect(sheetXml(writer.files['Sabi/applications.xlsx'])).toContain('https://app.clickup.com/t/t9');
   });
 });
 
