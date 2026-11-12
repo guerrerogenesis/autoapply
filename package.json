@@ -14,7 +14,7 @@
     "lint:firefox": "npm run build:firefox && web-ext lint --source-dir dist-firefox",
     "zip:firefox": "npm run build:firefox && web-ext build --source-dir dist-firefox --artifacts-dir . --overwrite-dest"
   },
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE.md",
   "devDependencies": {
     "@types/chrome": "^0.3.7",
     "@types/node": "^26.6.6",
@@ -27,5 +27,6 @@
   "dependencies": {
     "fflate": "^0.8.3",
     "pdfjs-dist": "^6.5.438"
-  }
+  },
+  "author": "Génesis Guerrero (https://geneg.com.mx)"
 }

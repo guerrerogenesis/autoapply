@@ -65,6 +65,10 @@ Regression tests: `tests/security.test.ts` (one block per finding). Run them wit
 - Tokens and secrets are not included in the JSON backup.
 - `npm audit`: 0 known vulnerabilities. Runtime dependencies: `fflate` (zip for .xlsx/.docx) and `pdfjs-dist` (PDF reading, loaded only when you import a PDF).
 
+## Privacy
+
+What data Sabi stores and when it leaves the browser: [PRIVACY.md](PRIVACY.md).
+
 ## Report a problem
 
 If you find a vulnerability, please open a private security advisory on GitHub instead of a public issue.

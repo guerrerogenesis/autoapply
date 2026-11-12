@@ -52,12 +52,15 @@ Un workflow que corra `typecheck`, `test`, `build` y `lint:firefox` en cada push
 - Renombra el repo a `sabi` en GitHub → Settings.
 - Fíjalo (pin) en tu perfil.
 - Agrega un GIF corto al README.
-- Agrega un archivo `LICENSE`: `package.json` dice MIT, pero el archivo todavía no existe.
+- ✅ Licencia lista: PolyForm Strict (`LICENSE.md`), más la marca protegida (`TRADEMARKS.md`).
+- **Aparta el ID de Firefox antes de hacer público el repo:** sube `npm run zip:firefox` a addons.mozilla.org como **"On your own"** (no listado). Es gratis, no aparece en la tienda y el ID `sabi@geneg.com.mx` queda a tu nombre.
 
 ### Paso 5 · Publicar
+- ✅ Política de privacidad lista: `PRIVACY.md` (inglés) y `PRIVACY.es.md`. Las tiendas piden una **URL pública**: cuando el repo sea público puedes usar el link de GitHub al archivo, o publicarla en geneg.com.mx (por ejemplo `/sabi/privacy`).
 - **Firefox Add-ons:** gratis. Corre `npm run zip:firefox` y lee las notas de `docs/firefox.md`.
 - **Chrome Web Store:** pago único de USD 5. Necesitas una política de privacidad corta y capturas de 1280×800.
 - Antes de publicar, sube la versión del `manifest.json`. Hoy es `0.1.0` y ya tiene muchas funciones nuevas.
+- Para publicar en las tiendas necesitarás cambiar la licencia o darte el permiso a ti misma: como autora puedes hacerlo cuando quieras.
 
 ### Paso 6 · Contarlo
 - Escribe un post en tu blog de DEV: *"I built a Chrome extension for my job search, then I hacked it"*.

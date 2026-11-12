@@ -44,4 +44,4 @@ Automated tests cover the logic, but these steps need a real Firefox:
 ## Before publishing on AMO
 
 - The two `UNSAFE_VAR_ASSIGNMENT` warnings come from pdf.js (Mozilla's own PDF library, unmodified). Reviewers can check it against the official release.
-- Review the data declaration: integrations send job data (URL, company, role) to the services the user turns on (Google Sheets, ClickUp, a webhook). Check Mozilla's current rules to confirm if this needs an *optional* data permission.
+- Review the data declaration: integrations send job data (URL, company, role) to the services the user turns on (Google Sheets, ClickUp, a webhook). Check Mozilla's current rules to confirm if this needs an *optional* data permission. The [Privacy Policy](../PRIVACY.md) describes exactly what is sent.

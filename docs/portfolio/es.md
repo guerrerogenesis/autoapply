@@ -91,3 +91,7 @@ TypeScript · WebExtensions Manifest V3 · esbuild · Vitest + jsdom · pdf.js �
 
 - Código: [github.com/guerrerogenesis/autoapply](https://github.com/guerrerogenesis/autoapply)
 - Portafolio: [geneg.com.mx](https://geneg.com.mx)
+
+## Licencia
+
+Código visible bajo la PolyForm Strict License 1.0.0: puedes leer el código y usarlo con fines no comerciales, pero no publicarlo ni modificarlo. El nombre y el logo de Sabi no están licenciados.

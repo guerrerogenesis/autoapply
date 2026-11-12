@@ -33,6 +33,7 @@ Project case study: [English](docs/portfolio/en.md) · [Español](docs/portfolio
 - Your data lives in the browser (`chrome.storage.local`). No server, no tracking, no account.
 - The script only runs when you click the button (`activeTab`). External sites (like ClickUp) are only allowed when you turn on an integration.
 - **Backup**: export and import everything as JSON (secrets are not exported).
+- Read the full [Privacy Policy](PRIVACY.md) ([en español](PRIVACY.es.md)).
 
 ## Security
 
@@ -158,6 +159,14 @@ demo/                    Demo form to try the extension
 docs/                    Integrations and Firefox guides, screenshots
 tests/                   Unit, DOM, security and Firefox tests + a trap job page
 ```
+
+## License
+
+Copyright © 2026 Génesis Guerrero.
+
+Sabi is **source-available** under the [PolyForm Strict License 1.0.0](LICENSE.md). You may read the code and use Sabi for **noncommercial** purposes. You may **not** distribute it (including publishing it in the Chrome Web Store, Firefox Add-ons or any other store), sell it, or make changes or new works based on it.
+
+The name "Sabi" and the frog logo are not licensed: see [TRADEMARKS.md](TRADEMARKS.md). Third-party components keep their own licenses: see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Roadmap
 

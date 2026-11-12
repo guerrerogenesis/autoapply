@@ -20,6 +20,7 @@ mkdirSync(`${outdir}/vendor`, { recursive: true });
 for (const file of ['pdf.min.mjs', 'pdf.worker.min.mjs']) {
   cpSync(`node_modules/pdfjs-dist/build/${file}`, `${outdir}/vendor/${file}`);
 }
+cpSync('node_modules/pdfjs-dist/LICENSE', `${outdir}/vendor/LICENSE-pdfjs.txt`); // Apache 2.0 notice
 
 /**
  * Firefox differences:
