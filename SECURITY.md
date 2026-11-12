@@ -19,12 +19,12 @@ A trap job page (`tests/fixtures/trap-job.html`) was used to attack the real ext
 | 1 | High | Hidden fields were filled (`display:none` parent, `opacity:0`, off-screen, 1×1 px, clipped) | Real visibility check on the field and all parents: CSS, `checkVisibility()`, size, position, clipping. Checked again just before filling. | `src/content/visibility.ts` |
 | 2 | High | Data was sent to third-party iframes (ads, widgets) | Only the top page, same-origin iframes and known job platforms (Greenhouse, Lever, Workable…) get data. Third-party frames are listed in the popup. | `src/core/frames.ts`, `popup.ts` |
 | 3 | High | Private saved answers were filled into any matching textarea | Two steps: the popup shows a preview, and you confirm. Saved answers are **not ticked** by default. Threshold raised from 0.3 to 0.4. Planted text is not saved as an answer. | `dom.ts` (`planFill` / `applyFill`) |
-| 4 | Medium | The ClickUp token was readable from the content script in web pages | The content script never reads storage: the popup sends only the profile, and only to trusted frames. `chrome.storage.local` is restricted to `TRUSTED_CONTEXTS`. | `content.ts`, `background.ts` |
+| 4 | Medium | The ClickUp token was readable from the content script in web pages | The content script never reads storage: the popup sends only the profile (base + chosen role), and only to trusted frames. In Chrome, `chrome.storage.local` is also restricted to `TRUSTED_CONTEXTS`. | `content.ts`, `background-helpers.ts` |
 | 5 | Medium | Formula injection in Google Sheets / CSV through the page title | Values that start with `= + - @`, tab or carriage return get a leading `'`, in the extension **and** in the Apps Script. Page-based prefill drops formula-like starts. | `src/core/sanitize.ts`, `sheets-sink.ts` |
 | 6 | Medium | Fake text near a field could choose what was filled | Explicit labels, `aria-label`, placeholder, `name` and `id` go first. Nearby text is the last option. | `dom.ts`, `matcher.ts` |
 | 7 | Low | The Apps Script asked for access to all your spreadsheets | `@OnlyCurrentDoc`: access to this spreadsheet only | `sheets-sink.ts` |
 | 8 | Low | Webhooks were not signed | `X-Sabi-Signature: sha256=HMAC(secret, timestamp + "." + body)` and `X-Sabi-Timestamp` | `webhook-sink.ts` |
-| 9 | Low | The backup import trusted any JSON | Schema validation: known fields only, strings with a max length, `http(s)` URLs only, max sizes. Links are rendered only if `http(s)`. | `src/core/backup.ts` |
+| 9 | Low | The backup import trusted any JSON | Schema validation for the profile, roles, answers and applications: known fields only, strings with a max length, `http(s)` URLs only, unique role ids, max sizes. Links are rendered only if `http(s)`. | `src/core/backup.ts` |
 | 10 | Low | `optional_host_permissions: https://*/*` is broad | Accepted (see below) | `manifest.json` |
 | 11 | Info | Secrets stay in clipboard history after copying | **New secret** buttons for Sheets and the webhook | Integrations tab |
 
@@ -36,6 +36,12 @@ Regression tests: `tests/security.test.ts` (one block per finding). Run them wit
 - PDFs are read with pdf.js (loaded only when needed) with `isEvalSupported: false`, `enableXfa: false` and `disableFontFace: true`, so a malicious PDF cannot run code. Max 5 MB and 10 pages.
 - DOCX files are unzipped reading only `word/document.xml` and its links (big embedded images are ignored).
 - Nothing is saved automatically: you review every field, and fields you already filled are not ticked.
+
+## Roles
+
+- Roles are created by each user. Nothing personal is in the code: new users start with no roles, and templates only have a name and keywords.
+- An imported role keeps only the known fields. Its portfolio link must be `http(s)` (other links are dropped), keywords are cleaned and limited, and ids are made unique (`tests/roles.test.ts`).
+- The page controls its title, and the title picks the role. The worst case is a wrong role, which you see in the popup (*Applying as*) and can change before filling.
 
 ## Firefox
 
@@ -54,10 +60,10 @@ Regression tests: `tests/security.test.ts` (one block per finding). Run them wit
 ## Good practices already in place
 
 - `activeTab` instead of `<all_urls>`: the extension never reads pages you don't use it on.
-- Manifest V3 default CSP. No `eval`. User data is never rendered with `innerHTML`.
+- Manifest V3 default CSP. No `eval`. No `innerHTML` in the extension pages (checked by a test).
 - Integration permissions are optional and asked at the moment you turn the integration on.
 - Tokens and secrets are not included in the JSON backup.
-- `npm audit`: 0 known vulnerabilities (the runtime dependency is `fflate` only).
+- `npm audit`: 0 known vulnerabilities. Runtime dependencies: `fflate` (zip for .xlsx/.docx) and `pdfjs-dist` (PDF reading, loaded only when you import a PDF).
 
 ## Report a problem
 

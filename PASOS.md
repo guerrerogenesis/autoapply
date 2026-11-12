@@ -1,52 +1,80 @@
 # Sabi — Plan por pasos
 
-La versión 1 ya funciona (pasos 1 a 5). Los pasos 6 a 10 son para mejorarla y para que el proyecto luzca en tu portafolio.
+Guía personal para usar Sabi, mejorarlo y presentarlo en tu portafolio. La documentación técnica en inglés está en el `README.md`.
 
-## Ya hecho (v0.1)
+## Lo que ya está hecho
 
-### Paso 1 · Instalar y probar (15 min)
-1. `npm install`, `npm run build`, `npm test` (34 tests).
-2. En Chrome: `chrome://extensions` → Modo desarrollador → **Cargar descomprimida** → carpeta `dist`.
-3. Abre **Profile** y llena tus datos reales. Exporta un backup en la pestaña **Backup**.
+- **Llenado con revisión:** vista previa de los campos, solo campos visibles y solo frames de confianza.
+- **Perfil base + roles:** cada rol cambia título, resumen, años, salario y portafolio. Sabi elige el rol según el título de la vacante.
+- **Importar desde CV:** PDF, DOCX o TXT, en el navegador y sin subir nada.
+- **Respuestas guardadas,** para todos los roles o solo para uno.
+- **Historial** con status, notas y rol, y exportación a Excel o CSV.
+- **Integraciones** con el patrón Adapter: Google Sheets, ClickUp, archivo Excel y webhook firmado.
+- **Auditoría de seguridad** con una vacante trampa. Los 11 hallazgos se corrigieron y tienen tests.
+- **Rebranding** a Sabi 🐸: ícono, paleta, Inter y modo oscuro.
+- **Compatible con Chrome, Edge, Brave y Firefox.**
+- **114 tests,** typecheck limpio y `web-ext lint` con 0 errores.
 
-### Paso 2 · Pruébala con el formulario demo
-`npx serve demo`, abre la página, da clic en la extensión → **Fill this form**. Los campos llenados se marcan en morado.
+## Cómo usarlo
 
-### Paso 3 · Úsala en vacantes reales
-Cada vez que postules:
-1. **Fill this form** → revisa los campos (siempre revisa antes de enviar).
-2. Escribe las preguntas abiertas que falten.
-3. **Save my answers from this page** → la próxima vez se llenan solas.
-4. **Save to history** → queda en tu historial con fecha y link.
+### 1 · Instalar (10 min)
+1. Corre `npm install`, `npm run build` y `npm test`.
+2. **Chrome:** abre `chrome://extensions` → **Modo desarrollador** → **Cargar descomprimida** → carpeta `dist`.
+3. **Firefox:** corre `npm run build:firefox`, abre `about:debugging` → **Load Temporary Add-on…** → `dist-firefox/manifest.json`.
 
-### Paso 4 · Lleva tu historial
-En **Applications** cambia el estado (interview, rejected…) y agrega notas. Exporta a CSV cuando quieras.
+### 2 · Configurar tu perfil (15 min)
+1. **Profile → Base info → Import from your CV.** Revisa lo que encontró y guarda.
+2. **Backup → Import JSON** → `sabi-mis-roles.json`, que está en `Documents\dev\myown` fuera del repo. Así cargas tus 6 roles.
+3. Entra a cada rol (las *pills* de Profile) y escribe su resumen, sus años y su salario.
+4. **Integrations → Google Sheets:** copia el script, pégalo en Apps Script, publícalo y pega la URL.
 
-### Paso 5 · Sube el repo a GitHub
-1. `git init`, primer commit, repo público `autoapply` (puedes renombrarlo a `sabi` en GitHub → Settings).
-2. Agrega capturas al README (popup, perfil, formulario llenado).
-3. Ponle topics: `chrome-extension`, `typescript`, `manifest-v3`, `job-search`.
+### 3 · Postular
+1. Abre la vacante y luego Sabi. Revisa **Applying as** y cámbialo si hace falta.
+2. **Review & fill** → revisa la lista → **Fill selected fields**. Revisa siempre el formulario antes de enviarlo.
+3. Escribe las preguntas abiertas que falten y guárdalas con **Save my answers from this page**.
+4. **Save application** guarda la postulación en el navegador y en tu Google Sheet, con el rol con el que aplicaste.
+
+### 4 · Dar seguimiento
+Cambia el **Status** en tu Google Sheet. Con la columna **Profile** puedes ver qué rol te consigue más entrevistas.
 
 ## Siguientes pasos
 
-### Paso 6 · Ajustar reglas con formularios reales (1–2 días)
-Cuando un campo no se llene, revisa su `label`/`name` con DevTools y agrega un patrón en `src/core/rules.ts` + un caso en `tests/matcher.test.ts`. Este ciclo (bug → test → fix) es muy buena historia para entrevistas.
+### Paso 1 · Probar con vacantes reales (esta semana)
+Cuando un campo no se llene bien, revisa su `label` o su `name` con DevTools. Agrega un patrón en `src/core/rules.ts` y un caso en `tests/matcher.test.ts`. El ciclo bug → test → fix es muy buena historia para entrevistas.
 
-### Paso 7 · Badge con campos detectados (medio día)
-Mostrar en el ícono cuántos campos se pueden llenar. Necesita un service worker y `chrome.action.setBadgeText`.
+### Paso 2 · Probar en Firefox real (30 min)
+Sigue la lista de `docs/firefox.md`. Si algo falla, abre **Inspect** en `about:debugging` y guarda el error.
 
-### Paso 8 · Soporte para Ashby y Workday (1–2 días)
-Workday usa componentes propios (dropdowns que no son `<select>`). Buen reto técnico.
+### Paso 3 · CI con GitHub Actions (1 hora)
+Un workflow que corra `typecheck`, `test`, `build` y `lint:firefox` en cada push, con el badge en el README.
 
-### Paso 9 · CI con GitHub Actions (1 hora)
-Workflow que corra `npm run typecheck`, `npm test` y `npm run build` en cada push. Agrega el badge al README.
+### Paso 4 · Pulir el repo (1 hora)
+- Renombra el repo a `sabi` en GitHub → Settings.
+- Fíjalo (pin) en tu perfil.
+- Agrega un GIF corto al README.
+- Agrega un archivo `LICENSE`: `package.json` dice MIT, pero el archivo todavía no existe.
 
-### Paso 10 · Backend opcional en Laravel (2–3 días)
-API con Sanctum para sincronizar el historial entre computadoras. Conecta con tu experiencia en Laravel y te da algo full stack para mostrar.
+### Paso 5 · Publicar
+- **Firefox Add-ons:** gratis. Corre `npm run zip:firefox` y lee las notas de `docs/firefox.md`.
+- **Chrome Web Store:** pago único de USD 5. Necesitas una política de privacidad corta y capturas de 1280×800.
+- Antes de publicar, sube la versión del `manifest.json`. Hoy es `0.1.0` y ya tiene muchas funciones nuevas.
 
-### Extra · Publicar en Chrome Web Store
-Cuenta de desarrollador (pago único de USD 5), política de privacidad corta (los datos no salen del navegador) y capturas. Tener una extensión publicada suma mucho al CV.
+### Paso 6 · Contarlo
+- Escribe un post en tu blog de DEV: *"I built a Chrome extension for my job search, then I hacked it"*.
+- Agrégalo a geneg.com.mx como proyecto destacado.
+
+### Ideas para después
+- Soporte para Ashby y Workday. Workday usa dropdowns propios, no `<select>`, y es un buen reto técnico.
+- Un badge en el ícono con el número de campos que se pueden llenar.
+- Mover la tarea de ClickUp cuando cambias el status.
+- Un backend opcional en Laravel para sincronizar el historial entre computadoras.
 
 ## Cómo contarlo en entrevistas (inglés sencillo)
 
-> "I was applying to many jobs and I was tired of typing the same information. So I built a Chrome extension with TypeScript. It detects form fields using labels and HTML attributes, and it fills them with my profile. The hard part was making it work with React forms, because they don't see a normal value change. I fixed it with the native value setter and real input events. I also wrote tests with Vitest and jsdom."
+> "I was applying to many jobs and I was tired of typing the same information. So I built Sabi, a browser extension for Chrome and Firefox, with TypeScript.
+>
+> It reads my CV, and I can have different roles, like Frontend or Data Analyst. When I open a job, Sabi picks the right role from the job title, shows me a preview of the fields, and fills only what I confirm. It also saves every application in my Google Sheet, so I can track the status.
+>
+> To save the applications in different places, I used the Adapter pattern: Google Sheets, ClickUp and Excel each have an adapter with the same interface. Adding a new one does not change the rest of the code.
+>
+> Then I audited my own extension. I built a fake job page with hidden fields and third-party iframes, and I found that it could steal data. I fixed it: now Sabi only fills fields you can see, and only in trusted frames. Every finding has a test. Today the project has more than 100 tests."

@@ -1,6 +1,6 @@
 # Integrations (Adapter pattern)
 
-Turn apps on and off in **Profile → Integrations** (or **Change** in the popup). Each app has a switch and a badge:
+Turn apps on and off in the **Integrations** tab of the settings page (or click **Change** in the popup). Each app has a switch and a badge:
 
 - **Off**: not used.
 - **Not saved** / **Needs setup**: turned on, but the fields are missing or not saved yet.
@@ -39,16 +39,26 @@ When you click **Save application**, Sabi can save the job in several places at 
   1. Saves locally first. If it is a duplicate, it stops (no duplicate ClickUp tasks).
   2. Calls the external adapters in parallel. If one fails, the others still save.
   3. Saves the external ids and links (for example the ClickUp task URL) in the local record.
-  4. Calls the `phase: 'final'` adapters (Excel). They run last, so the file already has the ClickUp link.
+  4. Calls the `phase: 'final'` adapters (Google Sheets, Excel). They run last, so the row and the file already have the ClickUp link.
 
 The popup never imports `ClickUpSink`. It only knows the interface.
+
+**Changes after saving.** When you change a status or notes, or delete an application in the **Applications** tab, `notifyChange()` calls `update()` / `remove()` on the adapters that have them:
+
+| Adapter | New application | Status / notes changed | Deleted |
+|---|---|---|---|
+| This browser | ✓ | ✓ | ✓ |
+| Google Sheets | adds a row | updates only that cell | deletes the row |
+| Excel file | rebuilds the file | rebuilds the file | rebuilds the file |
+| ClickUp | creates a task | – (planned) | – |
+| Webhook | sends `application.created` | – | – |
 
 ## Add a new destination (example: Notion)
 
 1. Create `src/core/sinks/notion-sink.ts` with a class that `implements ApplicationSink`.
 2. Add `'notion'` to `SinkId` and a `NotionSettings` type to `Settings` (+ defaults).
-3. Add one line in `createSinks()`.
-4. Add a form in the Integrations tab.
+3. Add one line in `createSinks()` and one in `integrationStatus()` (for the switch badge).
+4. Add a card in the Integrations tab (`public/options.html`).
 5. Write tests with a fake `fetch` (see `tests/sinks.test.ts`).
 
 The popup, the dispatcher and the other adapters do not change (Open/Closed principle).
@@ -57,10 +67,10 @@ The popup, the dispatcher and the other adapters do not change (Open/Closed prin
 
 1. In ClickUp: **Settings → Apps → API Token → Generate**. The token starts with `pk_`.
 2. Open the list where you want the tasks. Copy the URL from the browser (or only the number after `/li/`).
-3. In Sabi: **Profile → Integrations → ClickUp**. Turn it on, paste the token and the list URL, click **Save** and accept the Chrome permission for `api.clickup.com`.
+3. In Sabi: **Integrations → ClickUp**. Turn it on, paste the token and the list URL, click **Save** and accept the browser permission for `api.clickup.com`.
 4. Click **Test connection**. You should see the list name.
 
-Each application creates a task named `Company — Role`, with the link, date and notes in the description and the tag `sabi`. The optional **Status** must be a status that exists in that list (for example `to do`).
+Each application creates a task named `Company — Role`, with the link, date, notes and the role you applied as (*Applied as: Frontend Developer*) in the description, and the tag `sabi`. The optional **Status** must be a status that exists in that list (for example `to do`).
 
 > The token is saved only in `chrome.storage.local` and is not included in the JSON backup.
 
@@ -93,16 +103,17 @@ Security: the URL is public, so the script has a **secret** that only your exten
 > For tracking, prefer Google Sheets. This file is **rebuilt from the extension history each time**, so changes you make inside the file (for example Status) are lost on the next save. Change the status in the **Applications** tab instead.
 
 1. In Sabi: **Integrations → Excel file**. Turn it on, keep the name `Sabi/applications.xlsx` (or change it) and click **Save**.
-2. Chrome asks for the **downloads** permission. Accept it.
+2. The browser asks for the **downloads** permission. Accept it.
 3. The file is created in `Downloads\Sabi\applications.xlsx`.
 
 How it works:
 
 - A browser cannot add one row to an existing file. So `ExcelSink` rebuilds the **whole** workbook from the local history and overwrites the file (`chrome.downloads`, `conflictAction: 'overwrite'`). The local history is the source of truth.
 - The file is also updated when you change a status, edit notes or delete a row in the **Applications** tab.
-- Columns: Date, Company, Role, Status, URL, Notes, ClickUp link. The header is bold and frozen, and filters are on.
+- Columns: Date, Company, Role, Profile, Status, URL, Notes, ClickUp link. The header is bold and frozen, and filters are on.
 - **Close the file in Excel before saving**. Windows locks open files, so the update fails, and the popup shows the error. Click **Update Excel now** when the file is closed.
-- Chrome only allows paths inside your Downloads folder.
+- The browser only allows paths inside your Downloads folder.
+- In Firefox the file is downloaded from a `blob:` URL (Firefox does not download `data:` URLs). It works the same.
 - The `.xlsx` is written by `src/core/xlsx.ts` (~100 lines, with `fflate` for the zip), not by a big library.
 
 You can also download a copy at any time with **Applications → Export Excel**.
@@ -141,10 +152,13 @@ Payload:
   "application": {
     "id": "…", "company": "Acme", "role": "Full Stack Developer",
     "url": "https://…", "appliedAt": "2026-11-03T18:00:00.000Z",
-    "status": "applied", "notes": ""
+    "status": "applied", "notes": "",
+    "profile": "Full Stack Developer"
   }
 }
 ```
+
+`profile` is the role you applied as. It is not sent when you apply with the base profile only.
 
 ## Ideas for later
 
@@ -153,4 +167,4 @@ Payload:
 
 ## How much does the browser store?
 
-`chrome.storage.local` allows 10 MB. One application is about 400 bytes, so the history fits **more than 20,000 applications**. The local copy is small and is used to avoid duplicates and to show your history offline. The sheet is where you track.
+In Chrome, `chrome.storage.local` allows 10 MB. One application is about 400 bytes, so the history fits **more than 20,000 applications**. The local copy is small and is used to avoid duplicates and to show your history offline. The sheet is where you track.

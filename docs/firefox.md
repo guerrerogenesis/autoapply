@@ -33,8 +33,10 @@ Automated tests cover the logic, but these steps need a real Firefox:
 
 - [ ] Sabi loads with no errors in `about:debugging` (click **Inspect** to see the console).
 - [ ] The popup opens and shows the frog icon and the tagline.
-- [ ] **Profile**: save the base info, create a role from a template, import a CV (PDF and DOCX).
+- [ ] **Profile**: save the base info, create a role from a template, import a CV (PDF and DOCX), also into a role.
 - [ ] On `demo/demo-form.html` (open it with `npx serve demo`): **Review & fill** shows the list and fills the fields.
+- [ ] With roles: the popup shows **Applying as** with the role picked from the job title, and you can change it.
+- [ ] **Save application** appears in **Applications** with the role.
 - [ ] **Integrations**: turn on Google Sheets and click **Test connection** (Firefox asks for permission).
 - [ ] **Integrations → Excel file → Update Excel now** saves `Downloads/Sabi/applications.xlsx`.
 - [ ] **Backup**: export and import the JSON.
