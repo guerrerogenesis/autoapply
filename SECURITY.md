@@ -37,6 +37,12 @@ Regression tests: `tests/security.test.ts` (one block per finding). Run them wit
 - DOCX files are unzipped reading only `word/document.xml` and its links (big embedded images are ignored).
 - Nothing is saved automatically: you review every field, and fields you already filled are not ticked.
 
+## Firefox
+
+- `storage.setAccessLevel` does not exist in Firefox, so fix #4 has one layer less there. The main protection still holds: the content script never reads storage and only receives the profile from the popup.
+- Without `location.ancestorOrigins` (Firefox before 148), a frame whose parent cannot be read is treated as third-party, so it gets no data (fail-safe).
+- The Firefox build declares `data_collection_permissions: none`: Sabi sends nothing to the developer. See `docs/firefox.md` before publishing.
+
 ## Accepted risks
 
 - **Broad optional permission (#10).** It is needed so you can use any webhook URL (self-hosted n8n, Power Automate…). It is optional, it is only asked when you turn on the webhook, and only for that exact origin. HTTPS is required.

@@ -62,7 +62,7 @@ function renderRoleSelect(jobTitle: string) {
   $('role-row').hidden = roles.list.length === 0;
   if (!roles.list.length) return;
   const select = $<HTMLSelectElement>('role-select');
-  select.innerHTML = '';
+  select.replaceChildren();
   for (const role of roles.list) select.add(new Option(role.name, role.id));
   select.add(new Option('Base profile only', ''));
   const { role, matched } = pickRole(jobTitle, roles);
@@ -110,7 +110,7 @@ function renderPreview(blocked: string[]) {
   const role = selectedRole();
   const overrides = roleOverrides(role);
   const result = $('result');
-  result.innerHTML = '';
+  result.replaceChildren();
   const items = currentPlans.flatMap((fp) => fp.plan.items.map((item) => ({ ...item, frameId: fp.frameId })));
   const hidden = currentPlans.reduce((n, fp) => n + fp.plan.hidden, 0);
   const skipped = currentPlans.reduce((n, fp) => n + fp.plan.skipped, 0);
@@ -272,7 +272,7 @@ function renderDestinations(settings: Awaited<ReturnType<typeof load<'settings'>
 
 function renderSaveResults(results: SinkResult[], sinks: ApplicationSink[]) {
   const box = $('log-result');
-  box.innerHTML = '';
+  box.replaceChildren();
   const label = (id: string) => sinks.find((s) => s.id === id)?.label ?? id;
   for (const result of results) {
     const line = document.createElement('div');

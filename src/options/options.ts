@@ -39,6 +39,14 @@ const PROFILE_FIELDS: { key: keyof Profile; label: string; full?: boolean; multi
 
 const STATUSES: ApplicationStatus[] = ['applied', 'interview', 'offer', 'rejected', 'ghosted'];
 
+/** Small helper: an element with muted text (no innerHTML). */
+function mutedText<K extends keyof HTMLElementTagNameMap>(tag: K, text: string): HTMLElementTagNameMap[K] {
+  const el = document.createElement(tag);
+  el.className = 'muted';
+  el.textContent = text;
+  return el;
+}
+
 function flash(id: string, text: string) {
   $(id).textContent = text;
   setTimeout(() => ($(id).textContent = ''), 2500);
@@ -70,7 +78,7 @@ function setupTabs() {
 async function renderProfile() {
   const profile = await load('profile');
   const form = $('profile-form');
-  form.innerHTML = '';
+  form.replaceChildren();
   for (const field of PROFILE_FIELDS) {
     const wrapper = document.createElement('div');
     if (field.full) wrapper.className = 'full';
@@ -129,7 +137,7 @@ async function importCv(file: File) {
 function renderCvReview(fileName: string) {
   $('cv-name').textContent = fileName;
   const rows = $('cv-rows');
-  rows.innerHTML = '';
+  rows.replaceChildren();
   for (const field of cvFieldsForView()) {
     const found = cvFound[field.key];
     if (!found) continue;
@@ -206,8 +214,8 @@ let answers: SavedAnswer[] = [];
 
 function renderAnswers() {
   const list = $('answers');
-  list.innerHTML = '';
-  if (!answers.length) list.innerHTML = '<p class="muted">No answers yet. Add one, or use “Save my answers from this page” in the popup.</p>';
+  list.replaceChildren();
+  if (!answers.length) list.append(mutedText('p', 'No answers yet. Add one, or use “Save my answers from this page” in the popup.'));
   answers.forEach((item, index) => {
     const card = document.createElement('div');
     card.className = 'card stack answer';
@@ -254,7 +262,7 @@ async function saveAnswers() {
 async function renderApplications() {
   const applications = await load('applications');
   const stats = $('stats');
-  stats.innerHTML = '';
+  stats.replaceChildren();
   const counts: [string, number][] = [
     ['Total', applications.length],
     ...STATUSES.map((s) => [s, applications.filter((a) => a.status === s).length] as [string, number]),
@@ -262,15 +270,20 @@ async function renderApplications() {
   for (const [name, count] of counts) {
     const box = document.createElement('div');
     box.className = 'card stat';
-    box.innerHTML = `<b>${count}</b><span class="muted"></span>`;
-    box.querySelector('span')!.textContent = name;
+    const number = document.createElement('b');
+    number.textContent = String(count);
+    box.append(number, mutedText('span', name));
     stats.append(box);
   }
 
   const body = $('applications');
-  body.innerHTML = '';
+  body.replaceChildren();
   if (!applications.length) {
-    body.innerHTML = '<tr><td colspan="6" class="muted">No applications yet. Use “Save to history” in the popup.</td></tr>';
+    const row = document.createElement('tr');
+    const cell = mutedText('td', 'No applications yet. Use “Save application” in the popup.');
+    cell.colSpan = 6;
+    row.append(cell);
+    body.append(row);
     return;
   }
   for (const app of applications) body.append(applicationRow(app, applications));

@@ -1,7 +1,7 @@
 {
   "name": "sabi",
   "version": "0.1.0",
-  "description": "Sabi \u2013 Job Forms Helper. Less typing. More opportunities.",
+  "description": "Sabi – Job Forms Helper. Less typing. More opportunities.",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,10 @@
     "watch": "node scripts/build.mjs --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "zip": "npm run build && cd dist && zip -r ../sabi.zip ."
+    "zip": "npm run build && cd dist && zip -r ../sabi.zip .",
+    "build:firefox": "node scripts/build.mjs --target=firefox",
+    "lint:firefox": "npm run build:firefox && web-ext lint --source-dir dist-firefox",
+    "zip:firefox": "npm run build:firefox && web-ext build --source-dir dist-firefox --artifacts-dir . --overwrite-dest"
   },
   "license": "MIT",
   "devDependencies": {
@@ -18,7 +21,8 @@
     "esbuild": "^0.28.2",
     "jsdom": "^30.1.3",
     "typescript": "^7.0.2",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.0",
+    "web-ext": "^10.8.0"
   },
   "dependencies": {
     "fflate": "^0.8.3",

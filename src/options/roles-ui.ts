@@ -54,7 +54,7 @@ async function persist(message?: string) {
 
 function renderPills() {
   const bar = $('profile-pills');
-  bar.innerHTML = '';
+  bar.replaceChildren();
   const pill = (id: string, text: string, extra = '') => {
     const b = document.createElement('button');
     b.type = 'button';
@@ -108,7 +108,7 @@ async function renderRoleForm(role: Role) {
   $<HTMLInputElement>('r-default').checked = roles.defaultId === role.id;
 
   const grid = $('role-fields');
-  grid.innerHTML = '';
+  grid.replaceChildren();
   for (const key of ROLE_FIELDS) {
     const meta = ROLE_FIELD_LABELS[key];
     const wrap = document.createElement('div');
@@ -188,7 +188,7 @@ async function deleteRole() {
 
 function renderTemplates() {
   const box = $('role-templates');
-  box.innerHTML = '';
+  box.replaceChildren();
   const used = new Set(roles.list.map((r) => r.name.toLowerCase()));
   for (const template of ROLE_TEMPLATES) {
     if (used.has(template.name.toLowerCase())) continue;

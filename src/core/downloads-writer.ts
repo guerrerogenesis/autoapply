@@ -18,14 +18,22 @@ export const downloadsWriter: FileWriter = {
   async write(fileName, bytes) {
     if (!chrome.downloads) throw new Error('Allow downloads: turn Excel off and on again in Integrations.');
 
-    // data: URL instead of blob: URL, because the popup can close before the download starts.
-    const id = await chrome.downloads.download({
-      url: `data:${XLSX_MIME};base64,${toBase64(bytes)}`,
-      filename: fileName,
-      conflictAction: 'overwrite',
-      saveAs: false,
-    });
-    await waitUntilDone(id);
+    const options = { filename: fileName, conflictAction: 'overwrite' as const, saveAs: false };
+    let id: number;
+    let blobUrl = '';
+    try {
+      // Chrome: data: URL, because the popup can close before a blob: download starts.
+      id = await chrome.downloads.download({ ...options, url: `data:${XLSX_MIME};base64,${toBase64(bytes)}` });
+    } catch {
+      // Firefox does not download data: URLs: use a blob: URL, freed when the download ends.
+      blobUrl = URL.createObjectURL(new Blob([bytes as BlobPart], { type: XLSX_MIME }));
+      id = await chrome.downloads.download({ ...options, url: blobUrl });
+    }
+    try {
+      await waitUntilDone(id);
+    } finally {
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    }
   },
 };
 

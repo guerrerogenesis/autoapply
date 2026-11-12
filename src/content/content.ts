@@ -22,10 +22,21 @@ declare global {
   }
 }
 
-function topOrigin(): string {
-  if (window === window.top) return location.origin;
-  // Chrome: the origins of all parent frames, the last one is the top page.
-  const ancestors = location.ancestorOrigins;
+/**
+ * Origin of the top page, seen from this frame.
+ * 1. Same-origin parent: we can read it directly (works in every browser).
+ * 2. Chrome and Firefox 148+: location.ancestorOrigins lists the parents' origins.
+ * 3. Otherwise 'unknown', so the frame is treated as third-party (the safe choice).
+ */
+export function topOrigin(win: Window = window): string {
+  if (win === win.top) return win.location.origin;
+  try {
+    const origin = win.top?.location.origin; // throws for a cross-origin parent
+    if (origin) return origin;
+  } catch {
+    /* cross-origin parent: try ancestorOrigins */
+  }
+  const ancestors = win.location.ancestorOrigins;
   return ancestors?.length ? ancestors[ancestors.length - 1] : 'unknown';
 }
 

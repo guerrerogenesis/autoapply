@@ -51,7 +51,7 @@ Font: Inter (bundled, no request to Google Fonts). Tokens and dark mode: `public
 
 ## Tech stack
 
-TypeScript · Chrome Extension Manifest V3 · esbuild · Vitest + jsdom
+TypeScript · WebExtensions Manifest V3 (Chrome and Firefox) · esbuild · Vitest + jsdom · web-ext
 
 ## Project structure
 
@@ -94,13 +94,15 @@ npm run build      # creates dist/
 npm test           # runs the tests
 ```
 
-Load it in Chrome:
+Load it in Chrome, Edge or Brave:
 
 1. Open `chrome://extensions`.
 2. Turn on **Developer mode**.
 3. Click **Load unpacked** and select the `dist` folder.
 4. Pin Sabi, open **Profile** and add your info.
-5. Open a job form and click **Fill this form** (or press `Alt+Shift+F`).
+5. Open a job form and click **Review & fill this form** (or press `Alt+Shift+F`).
+
+**Firefox (140+):** run `npm run build:firefox`, open `about:debugging#/runtime/this-firefox` → **Load Temporary Add-on…** → `dist-firefox/manifest.json`. Details and differences: [docs/firefox.md](docs/firefox.md).
 
 To try it with the demo form, run `npx serve demo` (or any static server), open the page and click the extension.
 
